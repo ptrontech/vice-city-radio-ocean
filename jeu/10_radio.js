@@ -156,6 +156,7 @@ function tick() {
         else if(essai==="vie"){testVieMajestic(player,free,now);return;}
         else if(essai==="voitures"){testVoitures1986(player,free,now);return;}
         else if(essai==="facades"){testFacadesVille(player,free,now);return;}
+        else if(essai==="natation"){testNatation(player,free,now);return;}
         else if(essai==="contrats")testContrats(player,free);
         else if(essai==="frequence")testFrequence(player,free);
         else if(essai==="quartier")testQuartier(player,free);
@@ -163,7 +164,8 @@ function tick() {
     }
     if(benchOnly)return;
     tickQuai(playing && alive(player)?posOf(player):null,free,now);
-    tickSprint(player,free,now);
+    const enNage=tickNage(player,free,now);
+    tickSprint(player,free && !enNage,now);
     if(!free){
         fermerMajestic();
         if(ready){quiet();if(captured){ImGui.BeginFrame("VC_RADIO_OCEAN");ImGui.SetCursorVisible(0);ImGui.EndFrame();captured=false;}log("Radio Ocean | suspendu pendant la campagne");}

@@ -91,7 +91,8 @@ def change_palette(nuits_orage=False):
 def deploy_script(config):
     target=JEU/"CLEO/RadioOcean"
     target.mkdir(parents=True,exist_ok=True)
-    cfg={**config,"racine":JEU.as_posix()+"/"}
+    from installer_natation import preparer_nage
+    cfg={**config,"racine":JEU.as_posix()+"/","eauxNatation":preparer_nage(JEU,PROJET)}
     scripts="\n".join(p.read_text(encoding="utf-8") for p in sorted((PROJET/"jeu").glob("*.js")))
     data=("const CONFIG = "+json.dumps(cfg,ensure_ascii=True)+";\n"+scripts).encode("utf-8")
     path=target/"index.js"
