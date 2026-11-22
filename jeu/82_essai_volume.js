@@ -96,6 +96,7 @@ function testVolumes(p,free) {
     const v=prisesVolume[filmVolume.indice];
     if(maintenant>=filmVolume.horloge){
         N("SET_TIME_OF_DAY",v.heure,0);
+        N("CLEAR_HELP");
         filmVolume.horloge=maintenant+750;
     }
     if(filmVolume.depart===null){

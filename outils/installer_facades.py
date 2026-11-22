@@ -19,6 +19,7 @@ import matieres_volume as matieres
 import volume_rw
 from chambres_majestic import construire_chambres
 from hall_majestic import construire_hall
+from collision_hall_majestic import EFFETS_SEUIL
 import textures
 
 
@@ -30,6 +31,8 @@ VOIRIE = {
 }
 # Profils générés depuis les originaux reconnus. Une migration n’accepte que ces paires.
 HISTORIQUE = {
+    "e53fcfc1ecab82134bec2583e6d48e0f78327024f91c5e5b825077729ccd8ef8":
+        "dd357d8e99ff72665355b67bf4c589243879ecd1bcde08e13a5ed93dad620bdf",
     "459214e44fb227c76856b8fddbe7c7724efda1d5c244f955cb13ab9a6749576a":
         "bbfdfcfaaa9c94421afdd4e73a72bcd462db2ace9fe31df13cf33b6dd6959245",
     "dcee8fb90dc427e258d9cb33c21fffe511278fd16bea5ec50d0ecc3f94cbaad8":
@@ -51,7 +54,7 @@ HISTORIQUE = {
 }
 TAILLE_VOIRIE = 327_487_488 + 641_024
 MODELES = {"od_majestic2c_dy.dff": False, "od_majestic2c_nt.dff": True}
-ENTREES = set(TXD_CIBLES) | set(MODELES) | set(EFFETS_PALMIER)
+ENTREES = set(TXD_CIBLES) | set(MODELES) | set(EFFETS_PALMIER) | set(EFFETS_SEUIL)
 
 
 @contextmanager
@@ -123,7 +126,7 @@ def construire_hotel(entree, nuit):
     def architecture(_, nuit):
         return construire_architecture(surface, nuit)
     enveloppe = appliquer_relief(ouvert, nuit=nuit, constructeur=architecture)
-    meubles = list(construire_hall(surface, nuit=nuit))
+    meubles = list(construire_hall(surface, nuit=nuit, porte_ouverte=True))
     meubles.extend(construire_chambres(surface, nuit=nuit))
     return matieres.nommer_email(volume_rw.meubler(enveloppe, meubles))
 
@@ -146,6 +149,8 @@ def produire_secteurs(source, index_original):
                 ameliore = construire_hotel(entree, nuit)
             elif nom in EFFETS_PALMIER:
                 ameliore = EFFETS_PALMIER[nom](entree)
+            elif nom in EFFETS_SEUIL:
+                ameliore = EFFETS_SEUIL[nom](entree)
             else:
                 ameliore = ameliorer_txd(nom, entree, exiger_empreinte=True)
                 if nom == "od_hotels1.txd":

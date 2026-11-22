@@ -145,6 +145,11 @@ class Installation(unittest.TestCase):
                     self.assertEqual(len(relief["materiaux"]), len(anciens) + 1 + len(volume_rw.NOMS))
                     self.assertLess(len(relief["positions"]), 65_535)
                     continue
+                if nom in installer_facades.EFFETS_SEUIL:
+                    collision = installer_facades.EFFETS_SEUIL[nom](a)
+                    self.assertEqual(b[:len(collision)], collision)
+                    self.assertFalse(any(b[len(collision):]))
+                    continue
                 if nom in installer_facades.EFFETS_PALMIER:
                     fin = 12 + unpack_from("<I", b, 4)[0]
                     self.assertEqual(b[:fin], installer_facades.EFFETS_PALMIER[nom](a))

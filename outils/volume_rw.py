@@ -144,8 +144,8 @@ def terminer_modele(ouvert, sommets, faces):
     return wrap(rw.CLUMP,ver,rw.assembler(parties))
 
 
-def ouvrir_baies(blob, panneaux):
-    """Retire les vitrages opaques et découpe les murs de doublage dans chaque ouverture."""
+def ouvrir_baies(blob, panneaux, *, vitrages=OUVERTURES, parements=PEAUX):
+    """Ouvre les baies définies par leurs plans et les matériaux propres au bâtiment."""
     modele=rw.ouvrir_modele(blob)
     g,mats=modele[-2:]
     noms=rw.noms_materiaux(mats)
@@ -154,9 +154,9 @@ def ouvrir_baies(blob, panneaux):
     plans=[prisme(p) for p in panneaux]
     for b,a,m,c in rw.TRI.iter_unpack(g.faces):
         nom=noms[m]
-        if nom in OUVERTURES:
+        if nom in vitrages:
             continue
-        if nom not in PEAUX:
+        if nom not in parements:
             faces.append((a,b,c,m))
             continue
         original=[cache.lire(i) for i in (a,b,c)]
