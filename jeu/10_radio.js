@@ -138,6 +138,7 @@ function tick() {
     const playing=N("IS_PLAYER_PLAYING",0);
     const player=playing?N("GET_PLAYER_CHAR",0):null;
     const free=playing && alive(player) && !ONMISSION;
+    signalerDemarrage(player,free);
     if(mode==="Validation"){
         if(essai==="reprise"){
             if(!repriseVerifiee){
@@ -164,8 +165,11 @@ function tick() {
         if(ready){quiet();if(captured){ImGui.BeginFrame("VC_RADIO_OCEAN");ImGui.SetCursorVisible(0);ImGui.EndFrame();captured=false;}log("Radio Ocean | suspendu pendant la campagne");}
         ready=false;recentHub="";return;
     }
-    ready=true;const pos=posOf(player);
-    if(!firstHint && mode==="Libre"){N("REQUEST_COLLISION",...contact.slice(0,2));N("SET_CHAR_COORDINATES",player,contact[0],contact[1],ground(contact));}
+    ready=true;let pos=posOf(player);
+    if(!firstHint && mode==="Libre" && !repriseSauvegardee){
+        N("REQUEST_COLLISION",...contact.slice(0,2));N("SET_CHAR_COORDINATES",player,contact[0],contact[1],ground(contact));
+        pos=posOf(player);recentHub="contact";
+    }
     if(!firstHint){showTextBox("Radio Ocean : retrouve Ines sur Ocean Drive. Journal : touche configuree dans le lanceur.");firstHint=true;}
     tickMenuKeys();
     if(now>=nextWorld||now+1500<nextWorld){

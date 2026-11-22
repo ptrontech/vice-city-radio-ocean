@@ -57,4 +57,10 @@ def prepare():
             shutil.copytree(ORIGINE,target)
             target.rename(JEU)
     install()
+    if os.name=="nt":
+        import subprocess
+        import sys
+        pythonw=Path(sys.executable).with_name("pythonw.exe")
+        subprocess.run(["powershell.exe","-NoProfile","-ExecutionPolicy","RemoteSigned","-File",
+                        str(Path(__file__).with_name("raccourcis_jeu.ps1")),"-Pythonw",str(pythonw),"-Bureau"],check=True)
 if __name__=="__main__":prepare()

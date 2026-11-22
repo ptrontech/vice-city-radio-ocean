@@ -4,7 +4,7 @@ Une extension personnelle pour Vice City classique PC 1.0. Inès Vega fait tourn
 
 ## Jouer
 
-Double-cliquer sur **Jouer à Radio Océan** dans `E:\ViceCityAtelier`. Le lanceur propose la campagne ou le mode libre. **Mode libre** ouvre une partie indépendante avec trois livraisons et 1 800 $ au compte de la radio. Après l’introduction du jeu, Tommy arrive près d’Inès. **Campagne** garde l’introduction originale et commence la progression de la radio à zéro.
+Double-cliquer sur **Jouer à Radio Océan** ouvre la campagne et reprend la sauvegarde valide la plus récente. Au premier lancement d’une campagne vide, les emplacements valides du dossier personnel **GTA Vice City User Files** sont copiés dans le profil Campagne. **Mode libre Radio Océan**, dans le dossier Atelier, utilise ses propres sauvegardes et commence avec trois livraisons et 1 800 $ à la radio. Pour choisir un mode ou revoir l’introduction, ouvrir **Options Radio Océan** puis **Affichage et commandes** et décocher **Reprendre automatiquement et passer l’introduction**. Les deux films de lancement ont leur propre réglage.
 
 En campagne, aller sur Ocean Drive, sur le trottoir côté plage en face de l’Ocean View. Le repère magenta signale Inès, le vert la régie. Approcher à pied ouvre le menu. Les destinations de mission sont jaunes. Cliquer sur **Accepter la course** ou **Discuter avec Ines**. Pour un message libre, saisir une phrase et cliquer sur **Envoyer le message**. Deux questions sont aussi accessibles à la souris.
 

@@ -44,6 +44,7 @@
   "boutonSuivant": 9,
   "boutonPrecedent": 8,
   "videosLancement": false,
+  "demarrageDirect": true,
   "nuitsOrage": true,
   "facadesOcean": true,
   "seuilsSprint": [250, 750, 1500],

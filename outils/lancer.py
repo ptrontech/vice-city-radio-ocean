@@ -6,6 +6,8 @@ from pathlib import Path
 import subprocess
 import sys
 import threading
+import time
+import uuid
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -92,18 +94,43 @@ def start(mode, slot=None):
             creationflags=subprocess.CREATE_NO_WINDOW).decode("mbcs","replace")
         if '"gta-vc.exe"' in lines.lower():raise RuntimeError("Ferme la partie Vice City en cours avant de changer de profil.")
         cfg=json.loads((PROJECT/"config.json").read_text(encoding="utf-8"))
-        slot=slot if slot is not None else (9 if mode!="Campagne" else -1)
+        from demarrage import accompagner, environnement_jeu, reprise, signature_log, echec_avant_moteur
+        automatique=cfg.get("demarrageDirect",True)
+        slot=reprise(mode,GAME/mode,automatique,slot)
         (GAME/"scripts/III.VC.SA.SaveLoader.cfg").write_text(f"[MAIN]\nLoadSlot={slot}\nSkipLoadingScreens=1\nSkipOutro=1\nUserFilesFolder={mode}\n",encoding="ascii")
-        (GAME/"atelier-session.ini").write_text(f"[atelier]\nprofil={mode}\n",encoding="ascii")
         from installer import change_palette, deploy_script
         deploy_script(cfg)
         change_palette(nuits_orage=cfg.get("nuitsOrage",False))
         window_config(GAME,mode,cfg.get("ultralarge",False) and mode!="Validation")
         set_startup_movies(GAME,cfg.get("videosLancement",False) and mode!="Validation")
-        proc=subprocess.Popen([str(GAME/"gta-vc.exe")],cwd=GAME)
-        worker=threading.Thread(target=run,args=(GAME/mode,cfg["modeleIA"],lambda:proc.poll() is not None),daemon=True)
-        worker.start()
-        return proc.wait()
+        technique=GAME/"atelier-session.ini"
+        trace=GAME/"atelier-demarrage.log"
+        trace.write_text("",encoding="utf-8")
+        def journal(message):
+            with trace.open("a",encoding="utf-8") as line:
+                line.write(time.strftime("%H:%M:%S ")+message+"\n")
+        for essai in range(1,4):
+            jeton=uuid.uuid4().hex
+            rapide=automatique and mode!="Validation" and slot!=-1
+            technique.write_text(f"[atelier]\nprofil={mode}\njeton={jeton}\nintroAuto={int(rapide)}\nnouvellePartie={int(slot==9)}\n",encoding="ascii")
+            log_moteur=GAME/"cleo_redux.log"
+            ancienne_signature=signature_log(log_moteur)
+            proc=subprocess.Popen([str(GAME/"gta-vc.exe")],cwd=GAME,env=environnement_jeu())
+            journal(f"{mode} slot={slot} essai={essai} pid={proc.pid}")
+            worker=threading.Thread(target=run,args=(GAME/mode,cfg["modeleIA"],lambda p=proc:p.poll() is not None),daemon=True)
+            worker.start()
+            cible_normale=mode!="Validation" and automatique and slot!=-1
+            noir_visible=cible_normale and not cfg.get("videosLancement",False)
+            moteur=accompagner(proc,technique,jeton,rapide,cible_normale,noir_visible,log_moteur,ancienne_signature,journal)
+            code=proc.wait()
+            ec=code & 0xFFFFFFFF
+            journal(f"sortie=0x{ec:08x} moteur={moteur}")
+            if not echec_avant_moteur(code,moteur,log_moteur,ancienne_signature):
+                return code
+            if essai==3:
+                raise RuntimeError("Vice City s’est fermé avant le chargement du jeu après trois tentatives. Journal : "+str(trace))
+            journal("nouvelle tentative apres le crash avant chargement des scripts")
+            time.sleep(.8)
     finally:kernel.CloseHandle(ctypes.c_void_p(mutex))
 
 def configure(parent):
@@ -136,8 +163,10 @@ def configure(parent):
     ttk.Checkbutton(block,text="Nuits d’orage (pluie et ouragan)",variable=orage).pack(anchor="w",pady=4)
     movies=tk.BooleanVar(value=config.get("videosLancement",False))
     ttk.Checkbutton(block,text="Afficher les deux vidéos de lancement",variable=movies).pack(anchor="w",pady=4)
+    direct=tk.BooleanVar(value=config.get("demarrageDirect",True))
+    ttk.Checkbutton(block,text="Reprendre automatiquement et passer l’introduction",variable=direct).pack(anchor="w",pady=4)
     def save():
-        config.update(toucheJournal=letters[journal.get()],toucheSprint=keys[sprint.get()],ultralarge=ultra.get(),videosLancement=movies.get(),nuitsOrage=orage.get())
+        config.update(demarrageDirect=direct.get(),toucheJournal=letters[journal.get()],toucheSprint=keys[sprint.get()],ultralarge=ultra.get(),videosLancement=movies.get(),nuitsOrage=orage.get())
         tmp=cfgpath.with_suffix(".tmp")
         tmp.write_text(json.dumps(config,ensure_ascii=False,indent=2),encoding="utf-8")
         tmp.replace(cfgpath)
