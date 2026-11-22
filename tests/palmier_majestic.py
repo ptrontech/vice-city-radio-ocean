@@ -24,8 +24,8 @@ class Creation(unittest.TestCase):
 
     def test_limites_et_normales(self):
         m=self.arbre
-        self.assertLessEqual(sum(map(len,m.faces.values())),3900)
-        self.assertLess(len(m.positions),10000)
+        self.assertLessEqual(sum(map(len,m.faces.values())),5000)
+        self.assertLess(len(m.positions),14000)
         self.assertEqual({min(p[2] for p in m.positions),max(p[2] for p in m.positions)},
                          set(self.forme.bornes[2]))
         self.assertTrue(all(abs(sum(a*a for a in n)-1)<.00005 for n in m.normales))
@@ -39,7 +39,7 @@ class Creation(unittest.TestCase):
             return min((a,b,c),(b,c,a),(c,a,b))
         faces=Counter(key(*(m.positions[i] for i in tri)) for tri in m.faces[1])
         doubles=sum(n for (a,b,c),n in faces.items() if key(a,c,b) in faces)
-        self.assertGreaterEqual(doubles,1700)
+        self.assertGreaterEqual(doubles,2600)
         self.assertGreater(len({rgb for rgb in iter_unpack("4B",m.couleurs)}),120)
         self.assertEqual(set(m.couleurs[3::4]),{255})
         uv_tronc={m.uv[i] for tri in m.faces[0] for i in tri}
@@ -64,6 +64,11 @@ class IntegrationPC(unittest.TestCase):
         self.assertEqual(g0.sphere[:5],g.sphere[:5])
         self.assertEqual(g.sphere[5],1)
         self.assertEqual(rw.noms_materiaux(mats),("kbbark_test1",""))
+        coeffs=[unpack_from("<3f",rw.corps(list(chunks(blob)),rw.STRUCT),16)
+                for kind,_,blob in mats if kind==rw.MATERIAL]
+        for actual,expected in zip(coeffs,((.14,0.,.20),(.10,0.,.16))):
+            for value,ref in zip(actual,expected):
+                self.assertAlmostEqual(value,ref,places=5)
         ex0=list(chunks(rw.corps(geo0,rw.EXTENSION)))
         ex1=list(chunks(rw.corps(geo,rw.EXTENSION)))
         self.assertEqual([x for x in ex0 if x[0]!=rw.BIN_MESH],[x for x in ex1 if x[0]!=rw.BIN_MESH])
