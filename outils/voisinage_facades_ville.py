@@ -45,7 +45,7 @@ def heures(ide):
 
 def verifier(plans,placements,definitions,index,lire,palette):
     from facades_ville import cadres_atomiques,cadre,monde_ipl
-    from releve_facades_ville import MOBILIER
+    from releve_facades_ville import est_lointain,est_accessoire
     cellules_cibles=defaultdict(set);cibles=[]
     for nom,plan in plans.items():
         ident=plan["nom"]
@@ -63,11 +63,11 @@ def verifier(plans,placements,definitions,index,lire,palette):
                     for cell in cellules(monde_bbox):cellules_cibles[cell].add(n)
     exclus={}
     for nom,lieux in sorted(placements.items()):
-        if nom not in definitions or nom+".dff" not in index or nom.startswith("lod") or "_lod" in nom:
+        if nom not in definitions or nom+".dff" not in index or est_lointain(nom):
             continue
         # Les arbres, véhicules et mobiliers placés à l'extérieur ne représentent pas
         # une cloison. Le verre déjà transparent ne doit jamais devenir un mur.
-        if MOBILIER.search(nom):continue
+        if est_accessoire(nom):continue
         lieux=[(i,p) for i,p in enumerate(lieux) if p["zone"]==0]
         if not lieux:continue
         actives=heures(definitions[nom])

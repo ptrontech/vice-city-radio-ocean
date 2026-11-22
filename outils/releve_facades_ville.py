@@ -9,6 +9,28 @@ from collision_hall_majestic import Collision
 # Meubles, véhicules, voies, accessoires et arbres utilisent parfois les mêmes
 # matériaux que les bâtiments. Les protéger avant d'examiner les murs.
 MOBILIER = re.compile(r"(?:^lod|_lod|^veg|palm|tree|shrub|bush|hedge|plant|grass|railtrack|liftplat|crane|cranewin|baseball|butterf|roadsect|roadseg|road_?\d|alleyroad|coast|beach_?sand|wave|jetty|bollard|fence|gatebar|barrier|train|tram|truck|jumbo|learjet|vehic|yacht|sail|buoy|cargoshp|crgoshp|rustship|dockship|boat(?:yard)?(?:_?hull|deck)|barge|billboard|stadlight|lightpole|lamppost|trafficli|flyover|walkway|handrail|gatestand|_signs?\d|pavement|carwreck|scaffold|bunting|footbridge|_props?[\d_]|interior|_int(?:erior)?[\d_]*$)")
+ANNEXES = re.compile(r"bridge|bridg|brdg|brge|road|^oceanrd|wsh_r(?:oa)?d|washtooceanrd|"
+                     r"nitelit|spotlit|_lght|_lightext|clublight|clubdoors|garagedoor|shpnsdoor|_?pnsdoor|neon|"
+                     r"sign(?:s|age)?[_0-9]|sign(?:day|ight)|marinasign|_termsign|_term(?:ain)?tfloor|_newescaglas|"
+                     r"^gf_(?:mainisland|northisland|smallisl)|^ap_rland|^ap_transpol|^helipad|^dt_stadiumland|"
+                     r"^dtn_stadspaces|stadium.*alfa|_flag|mallflag|pianoprop|^docksprops|backlotprops|cargohull|"
+                     r"^dkshipment|^dockfuel|rustship|_shipset|_fuelbay|_smallradar|_crushers|crushlp|"
+                     r"^carwashpole|^ap_terminachek|^gf_clublight|^newsstand|^phonebooth|^rcyclbank|^starblocker|"
+                     r"^mallseats|ballust|_fnce|_?fenc(?:e|\d|$)|railing|rail[0-9]|_clubs?door|_icedoor|"
+                     r"^marinaveg|(?:vege?t?|gardens?)[0-9_]*$|sexpad_grdn|_grdn|"
+                     r"pool(?!house)|mallwater|hotelwater|_polgrnd|buildingground|bighotelgrnd|shpfr(?:nt|t).*grd|"
+                     r"^haitisky|^washnewsky|skyline|_stadium_start|washrafalpha|^scarbuildglas|glassplane|"
+                     r"(?:hotel|shop|office|store|factory|hangar|club)int(?:[ab_0-9]*$)|_stairs|stad_roa|wglasssmash")
+
+
+def est_lointain(nom):
+    return nom.startswith("lod") or "_lod" in nom or nom.startswith("islandlod")
+
+
+def est_accessoire(nom):
+    return bool(MOBILIER.search(nom) or ANNEXES.search(nom))
+
+
 EDIFICE = re.compile(r"build|block|blk|hotel|hote|house|hous|apart|tower|office|hospital|bld|shop|shp|shack|store|club|barber|garage|warehouse|wareh|hanga|term|depot|factor|school|bank|station|villa|mansion|manor|inn|condo|resid|stad|church|chapel|police|museum|diner|cafe|restaurant|pizz|market|pub|casino|cinema|marina|mall|drugstor|booth|factory|firest|printwork")
 MATFEN = re.compile(r"window|(?:^|_)(?:win|wnd|gls)[_0-9]|win(?:dows?|dow|d[0-9]|_[a-z0-9]|[1-9])|(?:resid|h[oau]s|hotel|office|shop|shut|apt|deco)[a-z]*win|(?:^|[_a-z])glas[sz]|vitrine|warewin|[a-z]win(?:[0-9]|$)")
 HORSFEN = re.compile(r"wine|glass_fence|stained|twink|windmach|windmill|turbine|cabinet|bottl|glassfloor|glassroof|glassdoor|_door|br[o0]ken|shadow|sign|billboard|poster|windshield|clock|shards|acunit|windblank|blankwin|flower.fence")
