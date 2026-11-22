@@ -45,6 +45,7 @@
   "boutonPrecedent": 8,
   "videosLancement": false,
   "nuitsOrage": true,
+  "facadesOcean": true,
   "seuilsSprint": [250, 750, 1500],
   "boutonSprint": 16,
   "toucheSprint": 16,

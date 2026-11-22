@@ -125,7 +125,9 @@ def ajouter_materiau(parts):
     kind, version, refs = parts[i]
     count, = unpack_from("<I", refs)
     parts[i] = kind, version, pack("<I", count+1) + refs[4:] + pack("<i", -1)
-    blanc = pack("<I", 0) + WHITE + pack("<2I3f", 0, 0, 1., 0., 1.)
+    # Le matériau blanc reçoit déjà ses teintes par sommet. Le plein gain
+    # ambiant/diffus rendrait le laiton crème et l’émail vert pâle au soleil.
+    blanc = pack("<I", 0) + WHITE + pack("<2I3f", 0, 0, .10, 0., .15)
     parts.append((MATERIAL,version,wrap(STRUCT,version,blanc)+wrap(EXTENSION,version,b"")))
     return count
 

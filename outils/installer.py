@@ -146,8 +146,8 @@ def install():
     config = json.loads((PROJET/"config.json").read_text(encoding="utf-8"))
     deploy_script(config)
     change_palette(nuits_orage=config.get("nuitsOrage", False))
-    from textures import construire
-    construire(ORIGINE,JEU/"models/generic.txd")
+    from installer_facades import installer as installer_facades
+    installer_facades(ORIGINE, JEU, actives=config.get("facadesOcean", True))
 
 if __name__ == "__main__":
     install()
