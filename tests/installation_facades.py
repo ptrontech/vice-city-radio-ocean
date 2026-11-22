@@ -106,8 +106,9 @@ class Installation(unittest.TestCase):
                     original, relief = maillage_rw.lire_surface(a), maillage_rw.lire_surface(b)
                     self.assertEqual(relief["positions"][:len(original["positions"])], original["positions"])
                     nuit = installer_facades.MODELES[nom]
-                    anciens = tuple(vitrages.nom_natif(vitrages.MATERIAUX[m][0], nuit)
-                                    if m in vitrages.MATERIAUX else m for m in original["materiaux"])
+                    noms = {m: vitrages.nom_natif(spec[0], nuit) for m, spec in vitrages.MATERIAUX.items()}
+                    noms["majescticalt"] = "romj_email"
+                    anciens = tuple(noms.get(m, m) for m in original["materiaux"])
                     self.assertEqual(relief["materiaux"][:-1], anciens)
                     # La cuisson subdivise la surface réceptrice, sans changer les
                     # dimensions de chacune des surfaces de matériau originales.
@@ -148,7 +149,7 @@ class Installation(unittest.TestCase):
                     self.assertEqual({n: installes[n] for n in anciens}, anciens)
                     attendus = {vitrages.nom_natif(type_baie, nuit)
                                 for type_baie, *_ in vitrages.MATERIAUX.values() for nuit in (False, True)}
-                    self.assertEqual(installes.keys() - anciens.keys(), attendus)
+                    self.assertEqual(installes.keys() - anciens.keys(), attendus | {"romj_email"})
                     b = intermediaire
                 mesures = facades.verifier(a, b, facades.MATERIAUX[nom])
                 self.assertTrue(mesures["empreinte_origine"])

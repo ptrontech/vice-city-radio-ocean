@@ -27,6 +27,8 @@ VOIRIE = {
 }
 # Profils générés depuis les originaux reconnus. Une migration n’accepte que ces paires.
 HISTORIQUE = {
+    "dcee8fb90dc427e258d9cb33c21fffe511278fd16bea5ec50d0ecc3f94cbaad8":
+        "627ef9bfcce39862022a0202f71c813212c655cb5c89b946567818d6bd5fa4f0",
     "1f5f2faf16b0b45563ee37698fe7fda77305fc5cbd65c28294fd8b2348574581":
         "f384be9a3f3fb94b2e80e5cca07ceb3b59bfdf3ba9ae7cfb4fdd714d281cccc5",
     "a01dae9d405da1f0a51e071fc40908c311835610a9b362a4f1ae85b35aff96bd":
