@@ -13,7 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "outils"))
 import facades
 import ancrage_majestic
 import relief_majestic
-import vitrages_majestic as vitrages
+import matieres_volume
+import volume_rw
 import installer_facades
 import maillage_rw
 from marquise_majestic import prolonger_marquise
@@ -106,14 +107,22 @@ class Installation(unittest.TestCase):
                     original, relief = maillage_rw.lire_surface(a), maillage_rw.lire_surface(b)
                     self.assertEqual(relief["positions"][:len(original["positions"])], original["positions"])
                     nuit = installer_facades.MODELES[nom]
-                    noms = {m: vitrages.nom_natif(spec[0], nuit) for m, spec in vitrages.MATERIAUX.items()}
-                    noms["majescticalt"] = "romj_email"
-                    anciens = tuple(noms.get(m, m) for m in original["materiaux"])
-                    self.assertEqual(relief["materiaux"][:-1], anciens)
-                    # La cuisson subdivise la surface réceptrice, sans changer les
-                    # dimensions de chacune des surfaces de matériau originales.
-                    for a0, a1 in zip(aires_par_materiau(original), aires_par_materiau(relief)):
-                        self.assertAlmostEqual(a0, a1, delta=max(.003, a0 * 1e-5))
+                    anciens = tuple(matieres_volume.EMAIL if m == matieres_volume.EMAIL_ORIGINE else m
+                                    for m in original["materiaux"])
+                    self.assertEqual(tuple(relief["materiaux"][:len(anciens)]), anciens)
+                    utilises = {relief["materiaux"][m] for _, _, _, m in relief["triangles"]}
+                    self.assertTrue(utilises.isdisjoint(volume_rw.OUVERTURES))
+                    self.assertTrue(set(volume_rw.NOMS.values()).issubset(utilises))
+                    avant_aires = aires_par_materiau(original)
+                    apres_aires = aires_par_materiau(relief)
+                    for nom_matiere, a0, a1 in zip(original["materiaux"], avant_aires, apres_aires):
+                        tolerance = max(.003, a0 * 1e-5)
+                        if nom_matiere in volume_rw.OUVERTURES:
+                            self.assertEqual(a1, 0)
+                        elif nom_matiere in volume_rw.PEAUX:
+                            self.assertLessEqual(a1, a0 + tolerance)
+                        else:
+                            self.assertAlmostEqual(a0, a1, delta=tolerance)
                     aretes = ancrage_majestic.coutures_toit(original)
                     self.assertGreaterEqual(len(aretes), 8)
                     altitudes = [p[2] for a, b, _ in aretes for p in (a, b)]
@@ -133,7 +142,8 @@ class Installation(unittest.TestCase):
                             self.assertIsNotNone(garniture)
                             self.assertGreater(garniture, facade if facade is not None else p["d"])
                     self.assertGreater(len(relief["triangles"]), len(original["triangles"]))
-                    self.assertEqual(len(relief["materiaux"]), len(original["materiaux"]) + 1)
+                    self.assertEqual(len(relief["materiaux"]), len(anciens) + 1 + len(volume_rw.NOMS))
+                    self.assertLess(len(relief["positions"]), 65_535)
                     continue
                 if nom in installer_facades.EFFETS_PALMIER:
                     fin = 12 + unpack_from("<I", b, 4)[0]
@@ -147,9 +157,11 @@ class Installation(unittest.TestCase):
                     anciens = natives_txd(intermediaire)
                     installes = natives_txd(b)
                     self.assertEqual({n: installes[n] for n in anciens}, anciens)
-                    attendus = {vitrages.nom_natif(type_baie, nuit)
-                                for type_baie, *_ in vitrages.MATERIAUX.values() for nuit in (False, True)}
-                    self.assertEqual(installes.keys() - anciens.keys(), attendus | {"romj_email"})
+                    attendus = set(volume_rw.NOMS.values()) | {matieres_volume.EMAIL}
+                    self.assertEqual(installes.keys() - anciens.keys(), attendus)
+                    raster_verre = installes[volume_rw.NOMS["verre"]][0][2]
+                    self.assertEqual(raster_verre[87], 3)
+                    self.assertEqual(raster_verre[92:100], bytes([0x11] * 8))
                     b = intermediaire
                 mesures = facades.verifier(a, b, facades.MATERIAUX[nom])
                 self.assertTrue(mesures["empreinte_origine"])

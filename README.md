@@ -34,6 +34,12 @@ Le compte de la radio paie les contrats et la propriété. L’argent et les sau
 
 Le repère bleu clair mène à la jetée sur la rive de Little Havana. Suivre la nouvelle passerelle jusqu’au banc pour écouter le bulletin de Radio Océan. Les planches prolongent le littoral d’environ 55 m de parcours. Ce ponton accueille aussi le dernier rendez-vous des **Voix de Vice**.
 
+## Le Majestic sur Ocean Drive
+
+Depuis l’Ocean View, remonter Ocean Drive vers le nord sur environ 300 m. Une marquise arrondie porte les lettres en laiton **MAJESTIC** au-dessus de l’entrée. Les encadrements des fenêtres, les appuis et les corniches ressortent du mur. Les huit vitrines et la porte donnent sur une seule réception d’environ six mètres de profondeur. En longeant le trottoir, on aperçoit successivement le côté du comptoir en noyer, les casiers à clés et les fauteuils du salon d’angle. Les 24 baies des étages s’ouvrent sur des pièces meublées. Sur rue, les rideaux de la suite, les lits jumeaux et le bureau de lecture ont chacun leur disposition. Les appliques et les suspensions éclairent ces pièces à la nuit tombée. [Matières du hall et des chambres](medias/matieres/README.md)
+
+Le palmier devant les marches a un tronc annelé et 21 palmes courbes, pour un total de 624 folioles modélisées sur les deux faces. Vice City emploie ce même modèle à 92 emplacements de la carte. Pour retrouver les façades et l’arbre d’origine, régler `facadesOcean` sur `false` dans `config.json`, fermer le jeu et relancer le préparateur.
+
 ## Affichage et souris
 
 Le réglage de départ utilise une fenêtre de **1920 × 1080 en 16:9**, avec champ de vision indépendant de la vitesse de la voiture. Le jeu conserve son limiteur. Le lanceur permet de rétablir les deux vidéos de démarrage. Les cinématiques scénarisées restent gérées par la campagne. **Affichage et commandes** permet d’activer le 3440 × 1440 au lancement suivant. Les catégories de météo d’origine restent présentes. La palette fait évoluer le ciel indigo, l’horizon de fin de journée, les reflets colorés de l’eau et la distance de vue par temps clair. Project2DFX ajoute des halos lumineux lointains. Sur Ocean Drive, la chaussée et la bordure du trottoir utilisent les variantes 256 × 256 retrouvées dans le jeu, avec leurs niveaux de détail d’origine.
@@ -54,6 +60,8 @@ Chaque achat, recrutement, mission réussie ou retrait écrit immédiatement la 
 - Pour désinstaller l’extension, fermer le jeu et le lanceur, conserver les profils souhaités hors de `E:\ViceCityAtelier`, puis supprimer le dossier Atelier et son raccourci. L’original reste disponible sur E:.
 
 ## L’équipe de l’atelier
+
+Sur le Bureau, ouvrir **Atelier des IA – Vice City**. Les trois panneaux affichent les nouvelles de Codex, Claude et Kimi dans **Journal GTA**. Dans **Moi**, choisir un ou plusieurs destinataires pour leur écrire. Chaque agent retrouve sa discussion à la prochaine ouverture. [Guide de la fenêtre](atelier/README.md)
 
 Codex développe les missions, la progression et les lieux jouables. Claude Code travaille sur les graphismes et les façades. Kimi prend l’application Windows qui rassemble les trois agents. Inès répond depuis Ollama sur le PC du joueur et peut rappeler un recrutement ou un bail à partir des faits enregistrés en jeu. Le suivi public des contributions et de leur validation figure dans les [tickets de Radio Océan](https://github.com/ptrontech/vice-city-radio-ocean/issues).
 

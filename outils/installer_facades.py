@@ -9,13 +9,16 @@ from struct import pack_into
 from tempfile import gettempdir
 
 from facades import TXD_CIBLES, ameliorer_txd
-from maillage_rw import appliquer_relief
+from maillage_rw import appliquer_relief, lire_surface
 import relief_majestic
 import ancrage_majestic
 from marquise_majestic import prolonger_marquise
 from enseigne_majestic import construire_enseigne
 from palmier_majestic import EFFETS_PALMIER
-import vitrages_majestic as vitrages
+import matieres_volume as matieres
+import volume_rw
+from chambres_majestic import construire_chambres
+from hall_majestic import construire_hall
 import textures
 
 
@@ -27,6 +30,8 @@ VOIRIE = {
 }
 # Profils générés depuis les originaux reconnus. Une migration n’accepte que ces paires.
 HISTORIQUE = {
+    "459214e44fb227c76856b8fddbe7c7724efda1d5c244f955cb13ab9a6749576a":
+        "bbfdfcfaaa9c94421afdd4e73a72bcd462db2ace9fe31df13cf33b6dd6959245",
     "dcee8fb90dc427e258d9cb33c21fffe511278fd16bea5ec50d0ecc3f94cbaad8":
         "627ef9bfcce39862022a0202f71c813212c655cb5c89b946567818d6bd5fa4f0",
     "1f5f2faf16b0b45563ee37698fe7fda77305fc5cbd65c28294fd8b2348574581":
@@ -110,6 +115,19 @@ def construire_architecture(surface, nuit=False):
             for face in volumes]
 
 
+def construire_hotel(entree, nuit):
+    surface = lire_surface(entree)
+    panneaux = relief_majestic._preparer(surface)["panneaux"]
+    ouvert = volume_rw.ouvrir_baies(entree, panneaux["hotelwindow1"])
+    # Les cadres suivent les 33 ouvertures d'origine même après leur découpe.
+    def architecture(_, nuit):
+        return construire_architecture(surface, nuit)
+    enveloppe = appliquer_relief(ouvert, nuit=nuit, constructeur=architecture)
+    meubles = list(construire_hall(surface, nuit=nuit))
+    meubles.extend(construire_chambres(surface, nuit=nuit))
+    return matieres.nommer_email(volume_rw.meubler(enveloppe, meubles))
+
+
 def produire_secteurs(source, index_original):
     secteurs = bytearray()
     pointeurs = {}
@@ -125,15 +143,13 @@ def produire_secteurs(source, index_original):
                 raise ValueError(f"Entrée originale tronquée : {nom}")
             if nom in MODELES:
                 nuit = MODELES[nom]
-                depli = vitrages.preparer_uv(entree)
-                relief = appliquer_relief(depli, nuit=nuit, constructeur=construire_architecture)
-                ameliore = vitrages.nommer_vitrages(relief, nuit)
+                ameliore = construire_hotel(entree, nuit)
             elif nom in EFFETS_PALMIER:
                 ameliore = EFFETS_PALMIER[nom](entree)
             else:
                 ameliore = ameliorer_txd(nom, entree, exiger_empreinte=True)
                 if nom == "od_hotels1.txd":
-                    ameliore = vitrages.ajouter_vitrages(ameliore)
+                    ameliore = matieres.ajouter_matieres(ameliore)
             compte = (len(ameliore) + textures.SECTOR - 1) // textures.SECTOR
             pointeurs[i] = ((TAILLE_VOIRIE + len(secteurs)) // textures.SECTOR, compte)
             secteurs.extend(ameliore)

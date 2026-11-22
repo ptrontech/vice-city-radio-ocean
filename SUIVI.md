@@ -58,6 +58,14 @@ Le quai de Little Havana passe les contrôles de 233 points d’appui géométri
 
 Le lancement rapide remplace temporairement les deux films d’introduction par deux passages d’un clip noir et muet de deux secondes généré pour le projet. Sur ce PC, deux lancements ont atteint le moteur de scripts en neuf et dix secondes, dont un suivi de l’intégralité du parcours du quai et des factions. Les vidéos complètes sont accessibles depuis le lanceur. Les essais portent sur des sessions courtes.
 
+## Suivre Milo à pied
+
+Sur le profil Validation, Tommy a conduit Milo jusqu’à la radio en marchant puis en courant. Milo a parcouru 187,1 m en 52 secondes et s’est arrêté à 12,7 m de la radio. Le test utilise la commande native de suivi et enregistre la position des deux personnages. Une seule livraison a versé 440 $ et les revenus attendus. L’abandon, le mauvais indice et l’expiration ont laissé la caisse intacte. Le journal local de cet essai est `Mesures/milo-contrats-marche-et-course-natives.txt`.
+
+## Atelier des trois IA
+
+Dans la fenêtre Windows, Codex, Claude et Kimi ont chacun répondu sur leur compte connecté. À la réouverture de la fenêtre, chaque agent a retrouvé le mot aléatoire placé dans sa discussion. Le double-clic sur le raccourci du Bureau a rappelé la même instance. Les journaux GTA et les échanges saisis dans l’atelier ont leurs propres onglets. [Mode d’emploi](atelier/README.md)
+
 ## Lots suivants
 
 | Fonctionnalité | Intérêt et travail restant |

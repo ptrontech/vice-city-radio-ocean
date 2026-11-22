@@ -6,7 +6,8 @@ Codex coordonne les missions et le monde jouable. Claude Code prend le rendu des
 
 | Chantier | Fichiers de départ |
 | --- | --- |
-| Graphismes | `outils/textures.py`, palette et composants dans `outils/installer.py` |
+| Graphismes | `outils/textures.py` pour la voirie, `outils/maillage_rw.py` pour le format RenderWare, `outils/ancrage_majestic.py` pour les baies, `outils/ombres_majestic.py` pour leurs ombres, `outils/volume_rw.py` pour les ouvertures et les matériaux, `outils/hall_majestic.py` et `outils/chambres_majestic.py` pour le mobilier et `outils/palmier_majestic.py` pour les palmes. |
+| Atelier des IA | `atelier/fenetre.py`, connecteurs officiels et format des nouvelles dans `atelier/README.md`. |
 | Missions | `jeu/00_demarrage.js`, `jeu/05_reportage.js`, `jeu/06_frequence.js` et `jeu/09_dossiers.js`. Les parcours de validation sont dans `jeu/85_essai_dossiers.js` et `jeu/87_essai_frequence.js`. |
 | Carte | `jeu/07_quai.js` et ses relevés de collisions dans `tests/quai_geometrie.py`. |
 | Escortes et travail | Cycle de vie des gardes dans `jeu/00_demarrage.js`, affectations dans `jeu/11_affectations.js` |
