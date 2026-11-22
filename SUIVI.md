@@ -20,6 +20,12 @@ Le profil dédié Validation a lancé une vraie nouvelle partie. Le parcours aut
 - L’introduction originale et les changements du drapeau de mission ont exercé la suspension du mod. Une campagne complète et ses missions tardives demandent une partie de longue durée.
 - Les tests locaux contrôlent aussi les paliers de recrutement, le double achat, les interruptions d’écriture, le dialogue de secours, la répétition d’une requête et les paliers de sprint. Les fichiers personnels des profils jouables restent indépendants de ces essais.
 
+## Travail de l’équipe et baux
+
+Dans le parcours en jeu, Rafa a quitté l’escorte pour tenir la régie. Une émission supplémentaire a crédité les 100 $ habituels et 50 $ pour son travail. Le rappel a transféré le même personnage vivant dans l’équipe. Le script de validation a placé Tommy dans les déclencheurs de porte d’origine. Vice City l’a déplacé à l’intérieur de l’hôtel puis du centre commercial. Le parcours a ensuite positionné Tommy aux deux guichets pour contrôler le bon étage et le sol du jeu.
+
+La signature de la suite 317 a débité 720 $, celle du disquaire a débité 1 050 $. Le deuxième clic sur chaque achat a été refusé. Le profil issu de la première version a conservé ses huit émissions, ses recettes et son garde. À la fin du parcours, la caisse contenait 650 $, la réserve 450 $ et les deux droits étaient acquis. Les étages restent accessibles par les portes et escaliers de la campagne pour une visite manuelle.
+
 ## Mesures de cadrage et de cadence
 
 Le profil fenêtré a indiqué 1920 × 1080 dans le titre Windows et dans le moteur de rendu. L’exécutable modifié a chargé SilentPatchVC, WindowedMode, WidescreenFix, VCLodLights et ImGuiRedux. Le champ de vision qui variait avec la vitesse a été désactivé. Les profils de jeu ont reçu les réglages de souris sauvegardés. Le signalement utilisateur de fort zoom, perte de souris puis écran noir est survenu pendant la comparaison. Une tentative ultérieure de la référence avec D3D8 natif fenêtré a aussi donné une exception Windows dans la copie Reference. Le comparatif final utilise la même traduction D3D9 et les mêmes correctifs de base pour les deux rendus.
@@ -34,9 +40,13 @@ Les relevés suivants proviennent du moteur, en millisecondes entre mises à jou
 
 Avec la restauration des deux matériaux 256 × 256 et le module de sprint actifs, le test final a mesuré **33 / 34 / 35 ms** (médiane, P95, P99) pour chacune des trois scènes. Le taxi a parcouru 12 m. Le moteur a exécuté la commande de sprint sans fatigue à pied et terminé de nouveau le transport d’Alma. L’essai automatisé a contrôlé l’appel natif. Le parcours de 1 500 m est couvert par des tests simulés de déplacement.
 
-Le générateur de textures utilise les données déjà présentes dans l’installation. Il conserve les secteurs originaux du fichier d’images, ajoute 641 024 octets et met à jour les deux entrées pertinentes de son index. Les deux matériaux ont neuf niveaux de détail. La comparaison locale se trouve dans `E:\\ViceCityAtelier\\EssaiTextures\\Comparaison-Ocean-Drive.png`. Cette image compare les textures extraites à la même échelle.
+Le générateur de textures utilise les données déjà présentes dans l’installation. Il conserve les secteurs originaux du fichier d’images, ajoute 641 024 octets et met à jour les deux entrées pertinentes de son index. Les deux matériaux ont neuf niveaux de détail. La comparaison locale se trouve dans `E:\ViceCityAtelier\EssaiTextures\Comparaison-Ocean-Drive.png`. Cette image compare les textures extraites à la même échelle.
 
 Les traces sur le PC sont dans `E:\ViceCityAtelier\Mesures`. Pour répéter, fermer le jeu avant de redéployer les scripts, préparer une copie de référence avec `outils/reference.py` puis utiliser son profil de validation. `outils/mesures.py` conserve les événements du journal CLEO. Un essai court au limiteur ne permet pas de chiffrer la marge GPU ni de conclure à la stabilité pendant une longue partie.
+
+## Revue du carnet de sprint
+
+Claude Code a examiné le calcul des distances et la reprise du carnet. Avec des seuils personnalisés de 10, 20 et 25 m, nous avons reproduit une validation trop tardive du dernier grade. Le correctif enregistre désormais la distance exacte du palier. Chaque nouvelle tentative manuelle signale aussi une écriture refusée. Le lanceur permet de réaffecter la touche suivie à la souris. Sept groupes de régression couvrent notamment ces cas et la reprise d’un enregistrement antérieur après une interruption.
 
 ## Lots suivants
 
@@ -44,6 +54,7 @@ Les traces sur le PC sont dans `E:\ViceCityAtelier\Mesures`. Pour répéter, fer
 | --- | --- |
 | Équipe de deux à quatre | Les seuils et les places sont configurés. Essayer des véhicules pleins, un garde bloqué et plusieurs missions originales avant d’augmenter le plafond. Six à huit gardes exigent des essais de limites et un véhicule d’accompagnement. |
 | Garages et conduite | Prototyper une place dans un garage existant et éprouver l’identification d’un véhicule après fermeture. Utiliser ensuite ces mesures pour des grades de conduite. |
+| Nouveaux baux | La suite 317 et le disquaire du North Point Mall utilisent les portes et les intérieurs de Vice City. Les vitrines, l’escalier et le plancher ont été localisés dans les cartes et les collisions de l’installation. |
 | Vie du quartier | Élargir le catalogue de missions au moyen de scripts VC documentés, puis ajouter des réactions et rôles qui agissent réellement dans le moteur. |
 | Nage, vélos et nouvelles animations | Comparer la nage de Vice City Extended Features sur une installation indépendante. Les vélos demandent modèles, animation et physique compatibles VC. |
 | Reflets et modèles | Comparer SkyGfx VC sur un profil distinct et mesurer la charge avec les mêmes scènes. Le ray tracing, la voix et les intérieurs supplémentaires restent au stade de l’étude. |

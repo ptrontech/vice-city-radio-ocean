@@ -20,6 +20,8 @@ const native = (command, ...args) => {
 const engine = vm.createContext({CONFIG,native,log(){}});
 vm.runInContext(fs.readFileSync(path.join(root,"jeu/00_demarrage.js"),"utf8"),engine);
 const run = source => vm.runInContext(source,engine);
+const old=run('unpack("1,8,5,1020,1,1,2,100~"+hash("1,8,5,1020,1,1,2,100"))');
+assert.equal(old.caisse,1020);assert.equal(old.biens,0);assert.equal(old.affecte,0);
 const place= (coords) => ({x:coords[0],y:coords[1],z:coords[2]});
 engine.lieu=place(CONFIG.local);
 engine.ines=place(CONFIG.contact);

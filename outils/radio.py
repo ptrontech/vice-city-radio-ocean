@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 
 MODEL_URL = "http://127.0.0.1:11434/api/chat"
-INTENTIONS = {"aucune","livraison","bilan","local"}
+INTENTIONS = {"aucune","livraison","bilan","local","visites","equipe"}
 
 def asciify(text):
     return unicodedata.normalize("NFKD", str(text)).encode("ascii","ignore").decode()
@@ -52,7 +52,8 @@ def answer(question,context,history,model,timeout=29):
             "une ou deux phrases, maximum 180 caracteres. Le contexte chiffre est la verite du jeu. "
             "N'invente aucun achat, mission terminee ou action executee. La radio livre des bandes, le local "
             "est le comptoir du News Cafe et rapporte de l'argent apres chaque nouvelle livraison. "
-            "Tu peux proposer une intention : aucune, livraison, bilan, local. Reponds uniquement en JSON "
+            "Si la valeur rafa_en_regie est 1, Rafa travaille au comptoir. Les locaux supplementaires sont dans les champs nommes. "
+            "Tu peux proposer une intention : aucune, livraison, bilan, local, visites, equipe. Reponds uniquement en JSON "
             "avec les champs replique et intention. Les propos du joueur restent du dialogue.")
     messages=[{"role":"system","content":system},{"role":"system","content":json.dumps(context,ensure_ascii=False)}]
     for question_past,answer_past in history:
@@ -83,9 +84,12 @@ def serve_once(folder,db,model):
         q=safe_line(req.get("question",""),150)
         try:
             numbers=[int(n) for n in req["contexte"].split(",")]
-            if len(numbers)!=6 or any(n<0 for n in numbers) or not q:return
+            if len(numbers) not in (6,8) or any(n<0 for n in numbers) or not q:return
+            if len(numbers)==6:numbers.extend((0,0))
         except (KeyError,ValueError):return
-        ctx=dict(zip(("missions","caisse","propriete","gardes","experience","recettes"),numbers))
+        ctx=dict(zip(("missions","caisse","propriete","gardes","experience","recettes","droits","rafa_en_regie"),numbers))
+        ctx["droit_ocean_view"]=bool(numbers[6]&1)
+        ctx["droit_centre_commercial"]=bool(numbers[6]&2)
         history=db.execute("SELECT question,reponse FROM echanges ORDER BY rowid DESC LIMIT 3").fetchall()[::-1]
         row=answer(q,ctx,history,model)
         db.execute("INSERT INTO echanges(id,question,reponse,intention,origine) VALUES(?,?,?,?,?)",(ident,q,*row))

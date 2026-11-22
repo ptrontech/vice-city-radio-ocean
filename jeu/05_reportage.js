@@ -40,7 +40,7 @@ function tickReport(pos,player) {
             m.step=2;N("SET_CHAR_OBJ_LEAVE_CAR",m.guest,car);say("Garde la voiture a l'arret. Alma descend pour le direct.");
         }
     }else if(!N("IS_CHAR_IN_ANY_CAR",m.guest)){
-        if(change(s=>{s.missions++;s.caisse+=cfg.primeReportage;s.reserve+=cfg.revenu;s.xp+=s.equipe;})){
+        if(change(s=>{s.missions++;s.caisse+=cfg.primeReportage;s.reserve+=cfg.revenu+revenuEquipe(s)+propertyIncome(s);s.xp+=s.equipe;})){
             // Le personnage reste dans le monde comme piéton ordinaire.
             N("MARK_CHAR_AS_NO_LONGER_NEEDED",m.guest);m.guest=null;
             cancelJob("");say("Direct a l'antenne. +"+cfg.primeReportage+" $ et une emission de reputation.");

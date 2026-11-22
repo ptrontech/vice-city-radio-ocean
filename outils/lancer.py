@@ -38,6 +38,8 @@ def start(mode, slot=None):
         slot=slot if slot is not None else (9 if mode!="Campagne" else -1)
         (GAME/"scripts/III.VC.SA.SaveLoader.cfg").write_text(f"[MAIN]\nLoadSlot={slot}\nSkipLoadingScreens=1\nSkipOutro=1\nUserFilesFolder={mode}\n",encoding="ascii")
         (GAME/"atelier-session.ini").write_text(f"[atelier]\nprofil={mode}\n",encoding="ascii")
+        from installer import deploy_script
+        deploy_script(cfg)
         window_config(GAME,mode,cfg.get("ultralarge",False) and mode!="Validation")
         startup=None
         if mode=="Validation":
@@ -49,24 +51,40 @@ def start(mode, slot=None):
     finally:kernel.CloseHandle(ctypes.c_void_p(mutex))
 
 def configure(parent):
-    cfgpath=PROJECT/"config.json";config=json.loads(cfgpath.read_text(encoding="utf-8"))
-    pane=tk.Toplevel(parent);pane.title("Commandes de Radio Océan");pane.resizable(False,False)
-    ttk.Label(pane,text="Clique puis appuie sur la lettre qui ouvrira le journal.").pack(padx=18,pady=12)
-    status=ttk.Label(pane,text="Journal clavier  ·  "+chr(config["toucheJournal"]));status.pack(pady=4)
-    ttk.Label(pane,text="Manette  ·  Sélection pour le journal, croix directionnelle pour naviguer.").pack(padx=18)
+    cfgpath=PROJECT/"config.json"
+    config=json.loads(cfgpath.read_text(encoding="utf-8"))
+    pane=tk.Toplevel(parent)
+    pane.title("Affichage et commandes de Radio Océan")
+    pane.resizable(False,False)
+    block=ttk.Frame(pane,padding=18)
+    block.pack(fill="both")
+    letters={chr(code):code for code in range(65,91)}
+    keys={"Action du jeu uniquement":0,"Maj":16,"Espace":32,"Ctrl":17,**letters}
+    def selector(label,values,code):
+        ttk.Label(block,text=label).pack(anchor="w",pady=(6,2))
+        current=next((key for key,value in values.items() if value==code),None)
+        if current is None:
+            current=f"Touche Windows {code}"
+            values[current]=code
+        field=ttk.Combobox(block,state="readonly",values=list(values),width=34)
+        field.set(current)
+        field.pack(fill="x")
+        return field
+    journal=selector("Ouvrir le journal",letters,config["toucheJournal"])
+    sprint=selector("Touche de sprint suivie par le carnet",keys,config.get("toucheSprint",16))
+    ttk.Label(block,text="Choisis la même touche Sprint dans les commandes de GTA.",wraplength=360).pack(anchor="w",pady=4)
+    ttk.Label(block,text="Manette  ·  Sélection ouvre le journal, la croix haut/bas parcourt les options.",wraplength=360).pack(anchor="w",pady=6)
     ultra=tk.BooleanVar(value=config.get("ultralarge",False))
-    def display():
-        config["ultralarge"]=ultra.get()
-        cfgpath.write_text(json.dumps(config,ensure_ascii=False,indent=2),encoding="utf-8")
-    ttk.Checkbutton(pane,text="Utiliser tout l’écran ultralarge (3440 × 1440)",variable=ultra,command=display).pack(padx=18,pady=8)
-    def on_key(event):
-        if len(event.keysym)!=1 or not event.keysym.isascii() or not event.keysym.isalpha():return
-        config["toucheJournal"]=ord(event.keysym.upper());cfgpath.write_text(json.dumps(config,ensure_ascii=False,indent=2),encoding="utf-8")
-        source=GAME/"CLEO/RadioOcean/index.js";lines=source.read_text(encoding="utf-8").splitlines(True)
-        deployed={**config,"racine":GAME.as_posix()+"/"}
-        lines[0]="const CONFIG = "+json.dumps(deployed,ensure_ascii=True)+";\n";source.write_text("".join(lines),encoding="utf-8")
-        status.configure(text="Journal clavier  ·  "+event.keysym.upper())
-    pane.bind("<KeyPress>",on_key);ttk.Button(pane,text="Terminé",command=pane.destroy).pack(pady=12);pane.focus_force()
+    ttk.Checkbutton(block,text="Utiliser tout l’écran ultralarge (3440 × 1440)",variable=ultra).pack(anchor="w",pady=6)
+    def save():
+        config.update(toucheJournal=letters[journal.get()],toucheSprint=keys[sprint.get()],ultralarge=ultra.get())
+        tmp=cfgpath.with_suffix(".tmp")
+        tmp.write_text(json.dumps(config,ensure_ascii=False,indent=2),encoding="utf-8")
+        tmp.replace(cfgpath)
+        pane.destroy()
+    ttk.Button(block,text="Enregistrer",command=save).pack(anchor="e",pady=(9,0))
+    pane.transient(parent)
+    pane.grab_set()
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument("--profil",choices=sorted(MODES));args=parser.parse_args()
@@ -79,7 +97,7 @@ def main():
     def choose(mode):chosen.append(mode);win.destroy()
     ttk.Button(outer,text="Jouer la campagne",command=lambda:choose("Campagne")).pack(fill="x",pady=3)
     ttk.Button(outer,text="Mode libre · 3 livraisons et 1 800 $",command=lambda:choose("Libre")).pack(fill="x",pady=3)
-    ttk.Button(outer,text="Affichage et touche du journal",command=lambda:configure(win)).pack(fill="x",pady=3)
+    ttk.Button(outer,text="Affichage et commandes",command=lambda:configure(win)).pack(fill="x",pady=3)
     win.mainloop()
     if chosen:return start(chosen[0])
 if __name__=="__main__":

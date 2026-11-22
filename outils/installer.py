@@ -67,6 +67,20 @@ def change_palette():
         raise ValueError(f"Nombre de tranches météo inattendu {changed}")
     (JEU/"data/timecyc.dat").write_text("\n".join(lines)+"\n",encoding="latin-1")
 
+def deploy_script(config):
+    target=JEU/"CLEO/RadioOcean"
+    target.mkdir(parents=True,exist_ok=True)
+    cfg={**config,"racine":JEU.as_posix()+"/"}
+    scripts="\n".join(p.read_text(encoding="utf-8") for p in sorted((PROJET/"jeu").glob("*.js")))
+    data=("const CONFIG = "+json.dumps(cfg,ensure_ascii=True)+";\n"+scripts).encode("utf-8")
+    path=target/"index.js"
+    if not path.exists() or path.read_bytes()!=data:
+        staging=target/"index.new"
+        staging.write_bytes(data)
+        staging.replace(path)
+    (target/"mod.json").write_text('{"permissions":["fs"]}',encoding="utf-8")
+    (JEU/"CLEO/CLEO_TEXT").mkdir(exist_ok=True)
+
 def install():
     if JEU.resolve() == ORIGINE.resolve() or sha256((JEU/"gta-vc.exe").read_bytes()).hexdigest() != "04e4db72629eaa786fdd182ac224f4fd6d68806f5f4fe5c1fb5f756dc4da11d7":
         raise SystemExit("Version de travail incompatible")
@@ -108,14 +122,7 @@ def install():
         original_settings=BASE/"SauvegardeInitiale/GTA Vice City User Files/gta_vc.set"
         if original_settings.is_file() and not (JEU/folder/"gta_vc.set").exists():
             copy(original_settings,JEU/folder/"gta_vc.set")
-    dest=JEU/"CLEO/RadioOcean"
-    dest.mkdir(exist_ok=True)
-    cfg=json.loads((PROJET/"config.json").read_text(encoding="utf-8"))
-    cfg["racine"]=JEU.as_posix()+"/"
-    (JEU/"CLEO/CLEO_TEXT").mkdir(exist_ok=True)
-    js="\n".join(p.read_text(encoding="utf-8") for p in sorted((PROJET/"jeu").glob("*.js")))
-    (dest/"index.js").write_text("const CONFIG = "+json.dumps(cfg,ensure_ascii=True)+";\n"+js,encoding="utf-8")
-    (dest/"mod.json").write_text('{"permissions":["fs"]}')
+    deploy_script(json.loads((PROJET/"config.json").read_text(encoding="utf-8")))
     change_palette()
     from textures import construire
     construire(ORIGINE,JEU/"models/generic.txd")

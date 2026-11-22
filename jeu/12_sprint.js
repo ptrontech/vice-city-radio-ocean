@@ -25,13 +25,13 @@ function loadSport(){
     sport=slots.sort((a,b)=>b.revision-a.revision)[0]||{revision:0,metres:0,suivi:true,brevet:false};
     return sport;
 }
-function saveSport(next){
+function saveSport(next,automatic=false){
     const rev=loadSport().revision+1;
     const body=[1,rev,next.metres,Number(next.suivi),Number(next.brevet)].join(",");
     const record=body+"~"+hash(body),slot=rev%2?"a":"b";
     writeKey(sprintFile,slot,record);
     if(readKey(sprintFile,slot)!==record){
-        if(Date.now()>sprintRetryAfter)say("Le carnet d'endurance ne peut pas etre enregistre.");
+        if(!automatic || Date.now()>=sprintRetryAfter)say("Le carnet d'endurance ne peut pas etre enregistre.");
         sprintRetryAfter=Date.now()+5000;
         return false;
     }
@@ -43,11 +43,14 @@ function sprintRank(metres){
 }
 function sprintStoreDistance(){
     const current=loadSport();
-    // L'unité d'entraînement est une tranche complète de dix mètres, conservée immédiatement.
-    const gained=Math.floor(sprintFraction/10)*10;
+    // Valider le prochain grade dès sa distance exacte, même entre deux tranches de dix mètres.
+    const goal=sprintGoals.find(value=>value>current.metres);
+    if(goal===undefined)return;
+    const untilGoal=goal-current.metres;
+    const gained=sprintFraction>=untilGoal?untilGoal:Math.floor(sprintFraction/10)*10;
     if(!gained||Date.now()<sprintRetryAfter)return;
     const next=Math.min(sprintLastGoal,current.metres+gained);
-    if(!saveSport({...current,metres:next}))return;
+    if(!saveSport({...current,metres:next},true))return;
     sprintFraction-=gained;
     if(sprintRank(next)>sprintRank(current.metres))say("Endurance : "+sprintRanks[sprintRank(next)]+" !");
 }
@@ -90,7 +93,7 @@ function sprintGrant(){
 function drawSprintMenu(){
     const current=loadSport(),rank=sprintRank(current.metres);
     ImGui.TextWrapped("Endurance | "+sprintRanks[rank]+" | "+current.metres+" m");
-    ImGui.TextWrapped("A pied, avance avec la commande Sprint de GTA. Au clavier PC d'origine : Maj gauche. Tu peux l'affecter dans les commandes du jeu.");
+    ImGui.TextWrapped("A pied, avance avec ta commande Sprint de GTA. Si tu la reaffectes au clavier, regle aussi la touche de suivi dans le lanceur.");
     if(!current.brevet){
         if(rank<sprintGoals.length)ImGui.TextWrapped("Prochain grade a "+sprintGoals[rank]+" m. Brevet de sprint sans fatigue a "+sprintLastGoal+" m.");
         if(mode==="Libre"||mode==="Validation"||current.metres>=sprintLastGoal){

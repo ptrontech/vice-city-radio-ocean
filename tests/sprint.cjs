@@ -17,7 +17,7 @@ function fixture(mode="Campagne", entries=new Map(), config={seuilsSprint:[10,20
             if(name==="IS_CHAR_IN_ANY_CAR")return model.car;
             if(name==="IS_CHAR_IN_WATER")return model.water;
             if(name==="IS_BUTTON_PRESSED")return model.pad;
-            if(name==="IS_KEY_PRESSED")return model.key;
+            if(name==="IS_KEY_PRESSED")return model.keysDown ? model.keysDown.has(args[0]) : model.key;
             if(name==="SET_PLAYER_NEVER_GETS_TIRED"){model.awards.push(args);return;}
             throw new Error(name);
         }
@@ -69,5 +69,21 @@ test("interruption des ecritures, desactivation et configuration personnalisee",
     assert.equal(f.value().metres,0);assert.deepEqual(f.model.awards,[]);
     const g=fixture("Campagne",new Map(),{seuilsSprint:[3,2,-5],toucheSprint:0});assert.equal(g.run("sprintLastGoal"),1500);
     g.model.key=true;g.move(40);assert.equal(g.value().metres,0);
+});
+test("le dernier palier est atteint a 25 m meme entre deux tranches",()=>{
+    const f=fixture("Campagne",new Map(),{seuilsSprint:[10,20,25]});
+    f.model.key=true;f.move(22);
+    assert.equal(f.value().metres,25);assert.equal(f.run("sprintGrant()"),true);
+});
+test("chaque confirmation manuelle rend son erreur de sauvegarde",()=>{
+    const f=fixture("Libre");f.model.blockWrites=true;
+    assert.equal(f.run("sprintGrant()"),false);
+    assert.equal(f.run("sprintGrant()"),false);
+    assert.equal(f.model.messages.length,2);
+});
+test("seule la touche de suivi reaffectee valide la course",()=>{
+    const f=fixture("Campagne",new Map(),{seuilsSprint:[10,20,30],toucheSprint:32});
+    f.model.keysDown=new Set([16]);f.move(30);assert.equal(f.value().metres,0);
+    f.model.keysDown=new Set([32]);f.move(30);assert.ok(f.value().metres>=10);
 });
 console.log(passes+" groupes de tests reussis");

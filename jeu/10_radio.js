@@ -7,7 +7,7 @@ function askInes(question) {
     if(!clean){say("Entre un message ou choisis un sujet.");return;}
     const id=bootId+"-"+(++exchange);
     writeKey("requetes.ini","question",clean);
-    writeKey("requetes.ini","contexte",[state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve].join(","));
+    writeKey("requetes.ini","contexte",[state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve,state.biens,state.affecte].join(","));
     writeKey("requetes.ini","id",id);
     pending={id,at:Date.now(),question:clean};proposal="aucune";reply="Ines ecoute la frequence...";
 }
@@ -17,7 +17,7 @@ function pollReply() {
     if(readKey("reponses.ini","id")===pending.id) {
         reply=plain([0,1,2,3].map(i=>readKey("reponses.ini","ligne"+i)).join("").replace(/_/g," "),224)||fallback();
         const intention=readKey("reponses.ini","intention");
-        proposal=["livraison","bilan","local"].includes(intention)?intention:"aucune";
+        proposal=["livraison","bilan","local","visites","equipe"].includes(intention)?intention:"aucune";
         memoryLabel=readKey("reponses.ini","origine")==="ollama"?"Ines - IA locale":"Ines - replique de secours";
         pending=null;log("Radio Ocean | dialogue "+memoryLabel);
     }else if(Date.now()-pending.at>45000){
@@ -61,6 +61,7 @@ function drawMenu(pos) {
             if(near(pos,contact,10))button("Parler a Ines",()=>openMenu("contact"));
             if(near(pos,local,9))button("Visiter le local",()=>openMenu("local"));
             button("Sprint et endurance",()=>openMenu("sprint"));
+            button("Locaux et visites",()=>openMenu("biens"));
             if(state.equipe)button("Ordres a l'equipe",()=>openMenu("equipe"));
             if(mission)button("Abandonner la livraison",()=>cancelJob("Course abandonnee."));
         }else if(menu==="contact"){
@@ -74,11 +75,14 @@ function drawMenu(pos) {
             if(state.equipe)button("Ordres a l'equipe",()=>openMenu("equipe"));
         }else if(menu==="sprint"){
             drawSprintMenu();
+        }else if(isPropertyMenu(menu)){
+            drawPropertyMenu(pos);
         }else if(menu==="local"||menu==="achat"){
             ImGui.TextWrapped("Regie du News Cafe | comptoir exterieur");
             ImGui.TextWrapped("Chaque emission livree apres l'achat rapporte "+cfg.revenu+" $ a retirer ici.");
             if(state.local){
                 ImGui.TextWrapped("Disponible : "+state.reserve+" $.");
+                optionsEmployeRegie(pos);
                 if(state.reserve)button("Retirer les recettes",()=>collect(pos));
                 if(!mission)button("Transporter la journaliste  +"+cfg.primeReportage+" $",()=>startReport(pos));
             }else if(state.caisse<cfg.prixLocal)ImGui.TextWrapped("Prix : "+cfg.prixLocal+" $. Continue les courses pour financer le local.");
@@ -87,7 +91,8 @@ function drawMenu(pos) {
                 button("Annuler",()=>openMenu("local"));
             }else button("Acheter  "+cfg.prixLocal+" $",()=>openMenu("achat"));
         }else if(menu==="equipe"){
-            ImGui.TextWrapped(noms.slice(0,state.equipe).map((n,i)=>n+" ("+roles[i]+")").join(", ")+" | Experience collective "+state.xp);
+            ImGui.TextWrapped(noms.slice(0,state.equipe).map((n,i)=>n+" ("+roles[i]+")").join(", ")+" | En escorte "+effectifTerrain()+" | Experience collective "+state.xp);
+            optionsEmployeRegie(pos);
             button("Suivre et proteger",()=>setOrder("suivre"));button("Attendre ici",()=>setOrder("attendre"));
             button("Rejoindre le vehicule",()=>{lastVehicle=0;setOrder("suivre");});
             if(state.equipe)button("Renvoyer "+noms[state.equipe-1],()=>openMenu("renvoi"));
@@ -103,6 +108,8 @@ function drawMenu(pos) {
                 button("Tu te souviens de mes courses ?",()=>askInes("Tu te souviens de mon travail pour la radio ?"));
                 if(proposal==="livraison"&&!mission&&near(pos,contact,10))button("Accepter la course proposee",()=>startJob(pos));
                 if(proposal==="bilan"||proposal==="local")button("Consulter le journal",()=>openMenu("journal"));
+                if(proposal==="visites")button("Voir les locaux",()=>openMenu("biens"));
+                if(proposal==="equipe"&&state.equipe)button("Voir mon equipe",()=>openMenu("equipe"));
             }
         }
         if(message && Date.now()<noticeUntil)ImGui.TextWrapped(message);
@@ -120,7 +127,17 @@ function tick() {
     const playing=N("IS_PLAYER_PLAYING",0);
     const player=playing?N("GET_PLAYER_CHAR",0):null;
     const free=playing && alive(player) && !ONMISSION;
-    if(mode==="Validation") testTick(playing,player,free,now);
+    if(mode==="Validation"){
+        if(essai==="reprise"){
+            if(!repriseVerifiee){
+                const attendu=readKey("essai.ini","attendu");
+                const actuel=[state.generation,state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve,state.biens,state.affecte].join(",");
+                verdict("deux baux et acteurs apres relance "+actuel,actuel===attendu&&state.biens===3);
+                repriseVerifiee=true;
+            }
+        }else if(essai==="quartier")testQuartier(player,free);
+        else testTick(playing,player,free,now);
+    }
     if(benchOnly)return;
     tickSprint(player,free,now);
     if(!free){
@@ -133,9 +150,9 @@ function tick() {
     tickMenuKeys();
     if(now>=nextWorld||now+1500<nextWorld){
         nextWorld=now+500;population(pos,player,now);pollReply();
-        const place=near(pos,contact,5)?"contact":near(pos,local,5)?"local":"";
+        const place=near(pos,contact,5)?"contact":near(pos,local,5)?"local":propertyPlace(pos);
         if(place && !recentHub && !menu && !N("IS_CHAR_IN_ANY_CAR",player) && (mode!=="Validation"||testStep===99))openMenu(place);
-        if(!place && ["contact","local","achat","radio"].includes(menu))menu="";
+        if(!place && (["contact","local","achat","radio"].includes(menu)||(isPropertyMenu(menu)&&menu!=="biens")))menu="";
         recentHub=place;
     }
     tickJob(pos);
