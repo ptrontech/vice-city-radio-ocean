@@ -38,7 +38,21 @@ Le repère bleu clair mène à la jetée sur la rive de Little Havana. Suivre la
 
 Depuis l’Ocean View, remonter Ocean Drive vers le nord sur environ 300 m. Une marquise arrondie porte les lettres en laiton **MAJESTIC** au-dessus de l’entrée. Les encadrements des fenêtres, les appuis et les corniches ressortent du mur. Le battant sud de l’entrée est ouvert. Depuis le perron, on peut entrer à pied, longer le comptoir et rejoindre le salon. Les huit vitrines et la porte donnent sur une seule réception d’environ six mètres de profondeur. En longeant le trottoir, on aperçoit successivement le côté du comptoir en noyer, les casiers à clés et les fauteuils du salon d’angle. Les 24 baies des étages s’ouvrent sur des pièces meublées. Sur rue, les rideaux de la suite, les lits jumeaux et le bureau de lecture ont chacun leur disposition. Les appliques et les suspensions éclairent ces pièces à la nuit tombée. [Matières du hall et des chambres](medias/matieres/README.md)
 
+La réceptionniste se déplace entre les postes du comptoir. Un voyageur monte depuis le trottoir, passe la porte et rejoint le salon après son passage à l’accueil. Une cliente circule entre les fauteuils. On peut les suivre à pied. Les trois civils apparaissent quand Tommy approche de l’hôtel.
+
 Le palmier devant les marches a un tronc annelé et 21 palmes courbes, pour un total de 624 folioles modélisées sur les deux faces. Vice City emploie ce même modèle à 92 emplacements de la carte. Pour retrouver les façades et l’arbre d’origine, régler `facadesOcean` sur `false` dans `config.json`, fermer le jeu et relancer le préparateur.
+
+## Les façades de Vice City
+
+Le préparateur mesure les surfaces, les textures et la place disponible dans les modèles de ta copie du jeu. Sur les 574 modèles de bâtiments ou de pans de façade identifiés hors Majestic, 563 ont été traités dans 20 secteurs de la carte. Parmi eux, 439 modèles gagnent du relief et 124 autres un éclairage ajusté à la forme de leurs murs. Au total, 597 emplacements extérieurs utilisent ces modèles. On peut notamment voir 375 pièces en profondeur derrière les fenêtres, 4 042 encadrements en retrait et 1 882 sections de corniche. Le Majestic, avec son hall accessible, s’ajoute à ces chiffres.
+
+Pour observer la profondeur, longer les vitrines de North Beach, Little Havana ou Downtown en regardant de biais. La vue sur les pièces change avec le déplacement de Tommy.
+
+## Voitures de 1986
+
+Vingt modèles du trafic gagnent des optiques en relief et des entourages ou des lames de calandre adaptés à leur carrosserie. La Sabre a quatre phares ronds, la Cheetah six feux arrière et les phares de la Perennial sont fixés aux ailes qui se détachent en cas de choc. Les nouvelles pièces utilisent les pivots du jeu pour suivre le mouvement et les dégâts.
+
+Une affiche de voyage **Vice City · Ocean Drive**, créée pour le projet, occupe un panneau d’Escobar International.
 
 ## Affichage et souris
 

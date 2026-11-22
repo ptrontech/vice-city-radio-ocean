@@ -1,5 +1,6 @@
 """L’essai sur l’archive personnelle est activé par VICE_CITY_ORIGINE."""
 from hashlib import sha256
+from functools import lru_cache
 from math import hypot
 from struct import unpack_from
 import os
@@ -78,6 +79,12 @@ class Installation(unittest.TestCase):
             modeles = travail / "models"
             src = origine / "models"
             attendues = installer_facades.VOIRIE
+            # Les interruptions simulées modifient la destination. La source et son
+            # index sont identiques à chaque nouvel essai dans ce répertoire temporaire.
+            secteurs = lru_cache(maxsize=1)(installer_facades.produire_secteurs)
+            cache = patch.object(installer_facades, "produire_secteurs", secteurs)
+            cache.start()
+            self.addCleanup(cache.stop)
             install = lambda actives: installer_facades.installer(origine, travail, actives)
             self.assertEqual(install(False)["sha256"], attendues)
             avant = index(modeles)
@@ -97,7 +104,9 @@ class Installation(unittest.TestCase):
             apres = index(modeles)
             self.assertEqual(len(avant), len(apres))
             affectees = [i for i, (a, b) in enumerate(zip(avant, apres)) if a != b]
-            self.assertEqual({textures.name(avant[i][2]) for i in affectees}, installer_facades.ENTREES)
+            plans_ville = installer_facades.facades_ville.inventorier(origine, signer=False)["plans"]
+            self.assertEqual({textures.name(avant[i][2]) for i in affectees},
+                             installer_facades.ENTREES | set(plans_ville))
             for i in affectees:
                 nom = textures.name(avant[i][2])
                 self.assertEqual(avant[i][2], apres[i][2])
@@ -144,6 +153,16 @@ class Installation(unittest.TestCase):
                     self.assertGreater(len(relief["triangles"]), len(original["triangles"]))
                     self.assertEqual(len(relief["materiaux"]), len(anciens) + 1 + len(volume_rw.NOMS))
                     self.assertLess(len(relief["positions"]), 65_535)
+                    continue
+                if nom in installer_facades.EFFETS_VOITURES or nom in installer_facades.EFFETS_AFFICHE:
+                    self.assertNotEqual(b, a)
+                    longueur = 12 + unpack_from("<I", b, 4)[0]
+                    self.assertGreater(len(b), 12)
+                    self.assertFalse(any(b[longueur:]))
+                    continue
+                if nom in plans_ville and nom not in installer_facades.ENTREES:
+                    self.assertNotEqual(a,b)
+                    self.assertEqual(unpack_from("<I", b)[0], maillage_rw.CLUMP)
                     continue
                 if nom in installer_facades.EFFETS_SEUIL:
                     collision = installer_facades.EFFETS_SEUIL[nom](a)

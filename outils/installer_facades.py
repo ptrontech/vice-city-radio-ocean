@@ -1,4 +1,4 @@
-"""Pose les façades d’Ocean Drive sur la voirie d’atelier et permet de les retirer."""
+"""Installe les modèles de la ville et ses voitures sur la copie personnelle de Vice City."""
 import argparse
 from contextlib import contextmanager
 from hashlib import sha256
@@ -20,6 +20,9 @@ import volume_rw
 from chambres_majestic import construire_chambres
 from hall_majestic import construire_hall
 from collision_hall_majestic import EFFETS_SEUIL
+from affiche_ocean_drive import EFFETS_AFFICHE
+from voitures_1986 import EFFETS_VOITURES
+import facades_ville
 import textures
 
 
@@ -31,6 +34,8 @@ VOIRIE = {
 }
 # Profils générés depuis les originaux reconnus. Une migration n’accepte que ces paires.
 HISTORIQUE = {
+    "37d9ef156ee715a114b564d5cf5dc55e8642d2021ebb1af56f7d76d815602c56":
+        "1b794387a1ac5e7970845da9a7eaad442de48bf3bcb077d436248c382ab0093a",
     "e53fcfc1ecab82134bec2583e6d48e0f78327024f91c5e5b825077729ccd8ef8":
         "dd357d8e99ff72665355b67bf4c589243879ecd1bcde08e13a5ed93dad620bdf",
     "459214e44fb227c76856b8fddbe7c7724efda1d5c244f955cb13ab9a6749576a":
@@ -54,7 +59,8 @@ HISTORIQUE = {
 }
 TAILLE_VOIRIE = 327_487_488 + 641_024
 MODELES = {"od_majestic2c_dy.dff": False, "od_majestic2c_nt.dff": True}
-ENTREES = set(TXD_CIBLES) | set(MODELES) | set(EFFETS_PALMIER) | set(EFFETS_SEUIL)
+EFFETS_MODELES = {**EFFETS_PALMIER, **EFFETS_SEUIL, **EFFETS_AFFICHE, **EFFETS_VOITURES}
+ENTREES = set(TXD_CIBLES) | set(MODELES) | set(EFFETS_MODELES)
 
 
 @contextmanager
@@ -131,14 +137,20 @@ def construire_hotel(entree, nuit):
     return matieres.nommer_email(volume_rw.meubler(enveloppe, meubles))
 
 
-def produire_secteurs(source, index_original):
+def produire_secteurs(source, index_original, plans_ville=None):
+    if plans_ville is None:
+        # Les entrées proviennent de la copie commerciale vérifiée. Chaque modèle est
+        # construit une seule fois, au moment de son écriture dans les nouveaux secteurs.
+        plans_ville = facades_ville.inventorier(source.parent, signer=False)["plans"]
+    # L’affiche de l’aéroport et les modèles déjà travaillés conservent leur géométrie dédiée.
+    cibles = ENTREES | set(plans_ville)
     secteurs = bytearray()
     pointeurs = {}
     noms_trouves = set()
     with (source / "gta3.img").open("rb") as image:
         for i, (debut, nombre, nom_brut) in enumerate(textures.ENTRY.iter_unpack(index_original)):
             nom = textures.name(nom_brut)
-            if nom not in ENTREES:
+            if nom not in cibles:
                 continue
             image.seek(debut * textures.SECTOR)
             entree = image.read(nombre * textures.SECTOR)
@@ -147,20 +159,20 @@ def produire_secteurs(source, index_original):
             if nom in MODELES:
                 nuit = MODELES[nom]
                 ameliore = construire_hotel(entree, nuit)
-            elif nom in EFFETS_PALMIER:
-                ameliore = EFFETS_PALMIER[nom](entree)
-            elif nom in EFFETS_SEUIL:
-                ameliore = EFFETS_SEUIL[nom](entree)
-            else:
+            elif nom in EFFETS_MODELES:
+                ameliore = EFFETS_MODELES[nom](entree)
+            elif nom in TXD_CIBLES:
                 ameliore = ameliorer_txd(nom, entree, exiger_empreinte=True)
                 if nom == "od_hotels1.txd":
                     ameliore = matieres.ajouter_matieres(ameliore)
+            else:
+                ameliore = facades_ville.transformer(entree, plans_ville[nom])
             compte = (len(ameliore) + textures.SECTOR - 1) // textures.SECTOR
             pointeurs[i] = ((TAILLE_VOIRIE + len(secteurs)) // textures.SECTOR, compte)
             secteurs.extend(ameliore)
             secteurs.extend(bytes(compte * textures.SECTOR - len(ameliore)))
             noms_trouves.add(nom)
-    if noms_trouves != ENTREES or len(pointeurs) != len(ENTREES):
+    if noms_trouves != cibles or len(pointeurs) != len(cibles):
         raise ValueError("Des entrées de façade sont absentes ou dupliquées")
     return secteurs, pointeurs
 
@@ -191,7 +203,10 @@ def composer(source, destination, actives):
     repertoire = destination / "gta3.dir"
     courant = repertoire.read_bytes()
     index_voirie = bytearray(courant)
-    for i in pointeurs:
+    # Une version précédente peut avoir travaillé un modèle absent du nouveau lot.
+    anciens = (i for i, (debut, _, _) in enumerate(textures.ENTRY.iter_unpack(courant))
+               if migrer and debut * textures.SECTOR >= TAILLE_VOIRIE)
+    for i in set(pointeurs).union(anciens):
         position = i * textures.ENTRY.size
         index_voirie[position:position + 8] = index_original[position:position + 8]
     if sha256(index_voirie).hexdigest() != VOIRIE["gta3.dir"]:
