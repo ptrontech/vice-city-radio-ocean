@@ -96,6 +96,7 @@ function testSeuil(p,free){
     if(e.phase==="fin"){testVolumes(p,free);return;}
     if(!free){if(e.phase!=="attente")finSeuil(t,"joueur-indisponible");return;}
     if(e.phase==="attente"){
+        N("SET_AREA_VISIBLE",0);
         N("REQUEST_COLLISION",275.031,-987.299);
         N("REQUEST_MODEL",21);
         N("LOAD_SCENE",275.031,-987.299,12);

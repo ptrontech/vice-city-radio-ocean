@@ -58,6 +58,8 @@ function ouvrirPriseVolume(p,index,maintenant) {
     filmVolume.horloge=maintenant+750;
     const v=prisesVolume[index];
     if(index===0){
+        // Une sauvegarde de l’Ocean View peut démarrer dans son intérieur.
+        N("SET_AREA_VISIBLE",0);
         testMove(p,[293,-1003,11]);
         menu="";
         N("DISPLAY_RADAR",false);

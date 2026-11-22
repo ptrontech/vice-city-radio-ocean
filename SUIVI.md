@@ -8,6 +8,10 @@ L’installation personnelle est dans `E:\Games\GTA_VC_1.0`. L’archive 7z rest
 
 Windows 11 Pro x64 build 26300, Intel Core i5-13600K à 14 cœurs et 20 processeurs logiques, 31,7 Gio de RAM, Radeon RX 6950 XT avec pilote 32.0.21045.29003, écran 3440 × 1440 à 144 Hz. Le jeu classique tourne avec son limiteur de cadence. Le modèle qwen2.5-coder:7b était déjà présent localement dans Ollama.
 
+## Démarrage autonome sous Windows 11
+
+Sur le PC du projet, le raccourci du Bureau a repris la campagne directement dans l’Ocean View. Le moteur a rendu les commandes de Tommy en 10,3 s. Une partie Libre neuve a atteint Inès en 25 s sur la copie de test. La vérification compare l’empreinte de la sauvegarde personnelle avec celle de la copie dans le profil Campagne. Les temps dépendent de l’installation et de la sauvegarde choisie.
+
 ## Parcours observés dans le jeu
 
 Le profil dédié Validation a lancé une vraie nouvelle partie. Le parcours automatisé déplace Tommy entre les objectifs par script, puis laisse le moteur traiter les acteurs, les places, les récompenses et la sortie du véhicule. Les traces distinguent ces opérations des essais manuels.
@@ -24,7 +28,7 @@ Le profil dédié Validation a lancé une vraie nouvelle partie. Le parcours aut
 
 À 14 heures, une caméra de Vice City PC traverse le trottoir devant les vitrines et contourne leur angle. Le comptoir masque le casier à clés, puis la jardinière passe devant le salon. Une seconde caméra suit une baie de l’étage sur 4,4 m. À 22 heures, le modèle nocturne montre le comptoir et ses deux luminaires depuis le seuil. Chaque prise dure neuf secondes. Le film provient de la fenêtre de jeu à 1920 × 1080.
 
-L’installateur découpe les doublages du bâtiment et reconstruit 24 chambres et un seul hall derrière la porte et les huit vitrines. Le contrôle des DFF jour et nuit retrouve 13 310 triangles de mobilier, surfaces intérieures et vitrage pour chaque variante. Le passage sud du perron mesure 1,985 m. Dans le profil Validation, un piéton commandé par la native de marche du jeu a parcouru 4,74 m entre le perron et le comptoir. Le suivi de ses positions confirme un passage à 1,06 m de l’axe, du côté sud de la porte. L’autre battant, le comptoir et le muret conservent leurs collisions. La réinstallation a reproduit les empreintes de la version active. Le retrait a restitué les collisions d’origine à l’octet près.
+L’installateur découpe les doublages du bâtiment et reconstruit 24 chambres et un seul hall derrière la porte et les huit vitrines. Le contrôle des DFF jour et nuit retrouve 13 310 triangles de mobilier, surfaces intérieures et vitrage pour chaque variante. Le passage sud du perron mesure 1,985 m. Dans le profil Validation, un piéton commandé par la native de marche du jeu a parcouru 4,74 m entre le perron et le comptoir. Le suivi de ses positions confirme un passage à 1,06 m de l’axe, du côté sud de la porte. Sur le trajet de retour, ce piéton s’est arrêté devant le battant nord fermé. Les sondes de géométrie vérifient aussi le comptoir et le muret. La réinstallation a reproduit les empreintes de la version active. Le retrait a restitué les collisions d’origine à l’octet près.
 
 ## Travail de l’équipe et baux
 
