@@ -12,6 +12,12 @@ import vitrages_majestic as verre
 
 
 class Vitrages(unittest.TestCase):
+    def test_nuancier_du_batiment(self):
+        self.assertEqual(verre.pigment((255,255,255)),(255,255,255))
+        for src,dst in verre.PIGMENTS:
+            self.assertEqual(verre.pigment(src),dst)
+            self.assertLess(max(dst)-min(dst),max(src)-min(src))
+
     def test_six_chaines_completes(self):
         empreintes=set()
         for cle,w,h,_ in verre.MATERIAUX.values():
@@ -28,16 +34,16 @@ class Vitrages(unittest.TestCase):
             data+=pack("<IIHHBBBB",512,0,128,128,16,1,4,1)
             data+=pack("<I",8192)+bytes(8192)
             return textures.wrap(0x15,v,textures.wrap(1,v,data)+textures.wrap(3,v,b""))
-        noms=tuple(verre.MATERIAUX)+("autrehotel",)
+        noms=tuple(verre.MATERIAUX)+(verre.EMAIL_ORIGINE,"autrehotel")
         contenu=textures.wrap(1,v,pack("<HH",len(noms),8))+b"".join(native(n) for n in noms)+textures.wrap(3,v,b"")
         src=textures.wrap(0x16,v,contenu)
         cible=verre.ajouter_vitrages(src)
         parts=textures.dictionary(cible)[1]
-        self.assertEqual(unpack_from("<HH",rw.corps(parts,1)),(10,8))
+        self.assertEqual(unpack_from("<HH",rw.corps(parts,1)),(12,8))
         anc=list(textures.natives(textures.dictionary(src)[1]))
         result=list(textures.natives(parts))
-        self.assertEqual([(n[3],n[4]) for n in anc],[(n[3],n[4]) for n in result[:4]])
-        self.assertEqual({x[3] for x in result[4:]},{verre.nom_natif(k,n) for k,*_ in verre.MATERIAUX.values() for n in (False,True)})
+        self.assertEqual([(n[3],n[4]) for n in anc],[(n[3],n[4]) for n in result[:len(noms)]])
+        self.assertEqual({x[3] for x in result[len(noms):]},{verre.EMAIL}|{verre.nom_natif(k,n) for k,*_ in verre.MATERIAUX.values() for n in (False,True)})
         self.assertRaises(ValueError,verre.ajouter_vitrages,cible)
 
 
@@ -68,7 +74,7 @@ class VitragesJeu(unittest.TestCase):
                     for i in (a,b,c):
                         self.assertTrue(all(0<x<1 for x in verre.UV.unpack_from(gn.uv[0],i*8)))
                 else:
-                    self.assertEqual(noms_n[id_mat],original)
+                    self.assertEqual(noms_n[id_mat],verre.EMAIL if original==verre.EMAIL_ORIGINE else original)
                     for i in (a,b,c):
                         self.assertEqual(g.uv[0][i*8:i*8+8],gn.uv[0][i*8:i*8+8])
                         self.assertEqual(g.couleurs[i*4:i*4+4],gn.couleurs[i*4:i*4+4])
