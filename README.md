@@ -14,6 +14,12 @@ Le journal s’ouvre avec **J**. Le lanceur permet de choisir une autre lettre. 
 
 Dans le journal ou chez Inès, cliquer sur **Sprint et endurance**. À pied, avancer et maintenir la commande Sprint de GTA (Maj gauche dans la configuration PC d’origine). Les distances courues alimentent des grades à 250, 750 et 1 500 m. Au dernier grade, le joueur peut confirmer son brevet de sprint sans fatigue. Les deux premiers grades marquent la progression du carnet. Le mode libre permet d’essayer le brevet dès l’arrivée. Si tu réaffectes Sprint, sélectionne aussi cette touche dans **Affichage et commandes** du lanceur. Le carnet enregistre chaque palier à sa distance exacte. Les restrictions liées à l’arme restent celles du moteur.
 
+## Nager et plonger
+
+Entrer à pied dans une eau assez profonde déclenche la nage. Utiliser les commandes de direction pour avancer et tourner. Maintenir **Sprint** accélère la nage, **S’accroupir** fait plonger Tommy et **Sauter** le ramène vers la surface. À l’approche d’une rive basse, avancer vers la terre pour sortir de l’eau.
+
+La jauge **Air** indique le souffle disponible. Tommy dispose de 16 secondes en immersion complète. Revenir respirer à la surface recharge la jauge. Rester sous l’eau après épuisement du souffle lui fait perdre progressivement de la vie, jusqu’à la noyade.
+
 ## Missions, équipe et argent
 
 | Activité | Fonctionnement |

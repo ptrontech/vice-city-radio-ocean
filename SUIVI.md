@@ -8,6 +8,14 @@ L’installation personnelle est dans `E:\Games\GTA_VC_1.0`. L’archive 7z rest
 
 Windows 11 Pro x64 build 26300, Intel Core i5-13600K à 14 cœurs et 20 processeurs logiques, 31,7 Gio de RAM, Radeon RX 6950 XT avec pilote 32.0.21045.29003, écran 3440 × 1440 à 144 Hz. Le jeu classique tourne avec son limiteur de cadence. Le modèle qwen2.5-coder:7b était déjà présent localement dans Ollama.
 
+## Bâtiments, voitures et nage
+
+Sur la copie PC 1.0 jouable, les 563 modèles de façade reconstruits correspondent aux empreintes attendues. Les 20 véhicules et les deux entrées du panneau de l’aéroport correspondent aux modèles reconstruits à partir des originaux. Le test de migration simule une interruption entre les écritures de l’archive et de l’index, reprend l’installation puis retrouve la voirie d’origine de l’atelier au retrait du lot.
+
+Dans le Majestic, les positions natives donnent 6,76 m parcourus par la réceptionniste, 11,58 m par le voyageur et 8,70 m par la cliente à l’intérieur du hall. Les trois personnages ont été libérés à la sortie du quartier.
+
+Dans le chenal, Tommy a nagé 9,59 m à la surface puis plongé à 4,20 m sous le niveau de l’eau. Sa réserve est remontée à 16 s en surface. Lors d’une seconde immersion prolongée, le premier point de vie a été perdu à zéro seconde d’air. Le moteur a ensuite confirmé la noyade dans le profil Validation.
+
 ## Démarrage autonome sous Windows 11
 
 Sur le PC du projet, le raccourci du Bureau a repris la campagne directement dans l’Ocean View. Le moteur a rendu les commandes de Tommy en 10,3 s. Une partie Libre neuve a atteint Inès en 25 s sur la copie de test. La vérification compare l’empreinte de la sauvegarde personnelle avec celle de la copie dans le profil Campagne. Les temps dépendent de l’installation et de la sauvegarde choisie.
