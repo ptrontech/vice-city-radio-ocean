@@ -219,7 +219,7 @@ def candidats(g,mats,identite,collision,textures_modele,nuit,nom):
 def analyser(nom,blob,collision_data,lieu,ide,textures_modele):
     if nom in releve.PROTEGER or "majestic2c" in nom:
         return None,"Majestic conservé"
-    if releve.MOBILIER.search(nom):
+    if releve.est_accessoire(nom):
         return None,"voie, accessoire, végétation ou intérieur"
     _,parts=rw.clump(blob)
     groupe=list(textures.chunks(rw.corps(parts,rw.GEOMETRY_LIST)))
@@ -279,6 +279,8 @@ def analyser(nom,blob,collision_data,lieu,ide,textures_modele):
             # Un nom de bâtiment peut désigner seulement ses néons, ses vitrages
             # ou son parking. Ne pas compter ces annexes comme des bâtiments.
             if re.search(r"pool|termsign|bikeshop_glass|ballust|_gls|stadspaces|glass|clublight|shopdoor|neon|factoryint|factorypol|mallseats|garagedoors|_al$|fnce|marinaveg|glss|balcony|grd$|clubdoor|_windows$|recycl|rcycl|rail\d|stad_road|starblocker|fenc|water|hotelsign|signday|signight|icedoor|terminachek",nom):
+                return None,"annexe séparée (verre, cour, accès, signe ou mobilier)"
+            if len(materiaux)<=5 and all(re.search(r"glas|gls|ground|grnd|alley_conc|grass|hedge|fence|walkway|tarmac|pool|line|wall|slab|concrete|ceiling|pave|garage|grid|black|dirt",m) for m in materiaux):
                 return None,"annexe séparée (verre, cour, accès, signe ou mobilier)"
             return None,"candidat bâtiment sans paroi verticale opaque exploitable"
     if meilleur:
@@ -408,7 +410,7 @@ def inventorier(origine, *, signer=True):
             etat[nom]=fiche
             entree=nom+".dff"
             if not dehors:motif="intérieur de mission ou de bâtiment"
-            elif nom.startswith("lod") or "_lod" in nom:motif="niveau de détail lointain"
+            elif releve.est_lointain(nom):motif="niveau de détail lointain"
             elif entree not in index or nom not in ide:motif="source IDE/DFF absente"
             else:
                 blob=lire(entree)

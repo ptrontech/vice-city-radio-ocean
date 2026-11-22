@@ -38,6 +38,14 @@ def plan(source,mode="piece"):
     return {"nom":"test","source":ville.empreinte(source),"famille":"habitation","geometries":[{"index":0,"baies":[b]}]}
 
 class TestFacades(unittest.TestCase):
+    def test_fonds_iles_et_annexes(self):
+        for nom in ("LODhotel","islandlodbeach","islandlodmainland","immeuble_lod"):
+            self.assertTrue(releve.est_lointain(nom.lower()))
+        for nom in ("roosbridge_dt","roosbrgestartf_nt","ap_roadsigns1_02","mlmallflag02","dt_nitelites1","gf_mainisland6b_01"):
+            self.assertTrue(releve.est_accessoire(nom))
+        for nom in ("miamiland171","nbdecoshop01","ap_flyingschool1","ci_poolhouse"):
+            self.assertFalse(releve.est_accessoire(nom))
+
     def test_source_et_idempotence(self):
         source=modele();p=plan(source);sortie=ville.transformer(source,p);p["sortie"]=ville.empreinte(sortie)
         self.assertEqual(ville.transformer(sortie,p),sortie)
