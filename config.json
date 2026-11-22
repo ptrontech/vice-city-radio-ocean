@@ -43,6 +43,7 @@
   "boutonValider": 16,
   "boutonSuivant": 9,
   "boutonPrecedent": 8,
+  "facadesOcean": true,
   "seuilsSprint": [250, 750, 1500],
   "boutonSprint": 16,
   "toucheSprint": 16,
