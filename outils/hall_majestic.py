@@ -11,6 +11,7 @@ from relief_majestic import _poly, _porte, _preparer
 
 SOL = .103  # La dalle commerciale sur les marches dépasse le bas de la porte de .081 m.
 PLAFOND = 3.67
+ANGLE_PORTE = 78*pi/180
 FOND_RUE = -5.95
 FOND_RETOUR = 4.05
 
@@ -225,7 +226,7 @@ def enveloppe(h):
         h.barre("laiton",(-2.70,y),(-.12,y),.026,SOL+.008,SOL+.014,BRONZE)
 
 
-def ouvertures(h):
+def ouvertures(h, porte_ouverte=False):
     vus=[]
     for a,b,haut in h.rep.baies:
         dx,dy=b[0]-a[0],b[1]-a[1]; l=hypot(dx,dy)
@@ -239,6 +240,7 @@ def ouvertures(h):
             if any(dist(v,existant)<.09 for existant in vus):continue
             vus.append(v)
             h.boite("metal",v[0]-.031,v[0]+.031,v[1]-.032,v[1]+.032,SOL,haut,(64,69,60))
+    debut_porte=len(h.tris)
     a,b,haut=h.rep.porte
     y0,y1=sorted((a[1],b[1])); axe=-.045; centre=(y0+y1)/2
     for y in (y0+.055,centre-.043,centre+.043,y1-.055):
@@ -253,6 +255,23 @@ def ouvertures(h):
         for z in (1.02,1.41):
             h.boite("laiton",axe+.015,axe+.14,y-.028,y+.028,z-.021,z+.021,LAITON)
         h.tour("laiton",axe+.14,y,[(.024,.997),(.025,1.43)],LAITON,8)
+
+    if porte_ouverte:
+        # Une seule charnière entraîne le verre, les deux traverses, la poignée
+        # et les montants de ce battant. L'imposte et le vantail nord sont fixes.
+        gond=y0+.055
+        for i in range(debut_porte,len(h.tris)):
+            mat,*verts=h.tris[i]
+            points=[h.rep.local(v[:3]) for v in verts]
+            if min(q[2] for q in points)>=2.645 or sum(q[1] for q in points)>=3*centre:
+                continue
+            deplaces=[]
+            for (x,y,z),ancien in zip(points,verts):
+                dx,dy=x-axe,y-gond
+                pos=(axe+dx*cos(ANGLE_PORTE)-dy*sin(ANGLE_PORTE),
+                     gond+dx*sin(ANGLE_PORTE)+dy*cos(ANGLE_PORTE),z)
+                deplaces.append((*h.rep.monde(pos),*ancien[3:]))
+            h.tris[i]=(mat,*deplaces)
 
 
 
@@ -420,11 +439,11 @@ def salon(h):
     plante(h,-3.98,-8.49,1.13)
 
 
-def construire_hall(surface,nuit=False):
+def construire_hall(surface,nuit=False,porte_ouverte=False):
     """Renvoie des triangles RenderWare par matériau, dans le repère du DFF original."""
     h=Hall(Repere.lire(surface),nuit)
     enveloppe(h)
-    ouvertures(h)
+    ouvertures(h,porte_ouverte)
     reception(h)
     salon(h)
     return h.tris
