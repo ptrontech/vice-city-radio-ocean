@@ -149,6 +149,8 @@ function tick() {
                 repriseVerifiee=true;
             }
         }else if(essai==="dossiers")testDossiers(player,free);
+        else if(essai==="majestic")testMajestic(player,free);
+        else if(essai==="contrats")testContrats(player,free);
         else if(essai==="frequence")testFrequence(player,free);
         else if(essai==="quartier")testQuartier(player,free);
         else testTick(playing,player,free,now);
