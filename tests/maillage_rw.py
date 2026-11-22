@@ -73,6 +73,30 @@ class Relief(unittest.TestCase):
         nuit=rw.appliquer_relief(modele(),nuit=True,constructeur=exemple)
         self.assertEqual(rw.lire_surface(jour),rw.lire_surface(nuit))
         self.assertNotEqual(rw.ouvrir_modele(jour)[4].couleurs,rw.ouvrir_modele(nuit)[4].couleurs)
+    def test_ombre_preserve_uv_et_cuisine_le_soleil_seulement_de_jour(self):
+        from ombres_majestic import cuire
+        largeur=5.
+        xy=((0.,0.),(largeur,0.),(0.,largeur))
+        g=rw.Geometrie(0x1002f,bytes((180,150,120,255))*3,
+            [b"".join(struct.pack("<2f",x/5,y/5) for x,y in xy)],rw.TRI.pack(1,0,0,2),
+            (0.,0.,0.,8.,1,0),b"".join(rw.VEC.pack(x,y,0.) for x,y in xy),b"")
+        surface=g.surface(("fancy_slab128",))
+        A=(0.,0.,.9,200,150,100);B=(2.,0.,.9,200,150,100)
+        C=(2.,2.,.9,200,150,100);D=(0.,2.,.9,200,150,100)
+        import copy
+        nuit=copy.deepcopy(g)
+        day_bin=cuire(g,surface,[(A,B,C),(A,C,D)])
+        night_bin=cuire(nuit,surface,[(A,B,C),(A,C,D)],nuit=True)
+        self.assertIsNotNone(day_bin);self.assertIsNotNone(night_bin)
+        self.assertGreater(len(g.positions)//12,3)
+        self.assertLess(min(g.couleurs[::4]),min(nuit.couleurs[::4]))
+        self.assertIn(255,g.couleurs[3::4])
+        world=g.surface(("fancy_slab128",))
+        self.assertEqual(Counter(map(orientee,splits(day_bin))),Counter(map(orientee,world["triangles"])))
+        for (x,y,z),(u,v) in zip(world["positions"],struct.iter_unpack("<2f",g.uv[0])):
+            self.assertAlmostEqual(x/5,u,places=5);self.assertAlmostEqual(y/5,v,places=5)
+            self.assertEqual(z,0.)
+
     def test_entrees_invalides_protegent_la_source(self):
         source=modele()
         for invalid in (source[:-7],source+b"autre",source.replace(b"hotelpeach",b"other-name")):
