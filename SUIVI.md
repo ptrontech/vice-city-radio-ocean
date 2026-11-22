@@ -20,6 +20,12 @@ Le profil dédié Validation a lancé une vraie nouvelle partie. Le parcours aut
 - L’introduction originale et les changements du drapeau de mission ont exercé la suspension du mod. Une campagne complète et ses missions tardives demandent une partie de longue durée.
 - Les tests locaux contrôlent aussi les paliers de recrutement, le double achat, les interruptions d’écriture, le dialogue de secours, la répétition d’une requête et les paliers de sprint. Les fichiers personnels des profils jouables restent indépendants de ces essais.
 
+## Réception et chambres du Majestic
+
+À 14 heures, une caméra de Vice City PC traverse le trottoir devant les vitrines et contourne leur angle. Le comptoir masque le casier à clés, puis la jardinière passe devant le salon. Une seconde caméra suit une baie de l’étage sur 4,4 m. À 22 heures, le modèle nocturne montre le comptoir et ses deux luminaires depuis le seuil. Chaque prise dure neuf secondes. Le film provient de la fenêtre de jeu à 1920 × 1080.
+
+L’installateur découpe les doublages du bâtiment et reconstruit 24 chambres et un seul hall derrière la porte et les huit vitrines. Le contrôle des DFF jour et nuit retrouve 13 310 triangles de mobilier, surfaces intérieures et vitrage pour chaque variante. Le passage sud du perron mesure 1,985 m. Dans le profil Validation, un piéton commandé par la native de marche du jeu a parcouru 4,74 m entre le perron et le comptoir. Le suivi de ses positions confirme un passage à 1,06 m de l’axe, du côté sud de la porte. L’autre battant, le comptoir et le muret conservent leurs collisions. La réinstallation a reproduit les empreintes de la version active. Le retrait a restitué les collisions d’origine à l’octet près.
+
 ## Travail de l’équipe et baux
 
 Dans le parcours en jeu, Rafa a quitté l’escorte pour tenir la régie. Une émission supplémentaire a crédité les 100 $ habituels et 50 $ pour son travail. Le rappel a transféré le même personnage vivant dans l’équipe. Le script de validation a placé Tommy dans les déclencheurs de porte d’origine. Vice City l’a déplacé à l’intérieur de l’hôtel puis du centre commercial. Le parcours a ensuite positionné Tommy aux deux guichets pour contrôler le bon étage et le sol du jeu.
