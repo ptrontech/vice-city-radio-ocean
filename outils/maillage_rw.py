@@ -1,7 +1,7 @@
 """Ajoute des volumes architecturaux au DFF PC de jour ou de nuit du Majestic.
 
-Les tableaux de sommets, de couleurs et de triangles du bâtiment d'origine restent
-à leur place. Le nouveau matériau utilise les couleurs apportées par le relief.
+Les matériaux et les UV d'origine sont conservés. Les pans recevant les ombres
+utilisent une tessellation locale. Un matériau supplémentaire porte la couleur des moulures.
 Les fichiers DFF du joueur sont lus au moment de l'installation.
 """
 from dataclasses import dataclass
@@ -209,7 +209,7 @@ def lire_surface(blob):
     _, _, _, _, g, mats = ouvrir_modele(blob)
     return g.surface(noms_materiaux(mats))
 
-def appliquer_relief(blob, nuit=False, constructeur=None):
+def appliquer_relief(blob, nuit=False, constructeur=None, ombres=True):
     if constructeur is None:
         from relief_majestic import construire_relief
         constructeur = construire_relief
@@ -217,10 +217,15 @@ def appliquer_relief(blob, nuit=False, constructeur=None):
     surface = g.surface(noms_materiaux(mats))
     if "hotelwindow2" not in surface["materiaux"] or "hotelpeach" not in surface["materiaux"]:
         raise ValueError("Ce DFF ne correspond pas au Majestic d’Ocean Drive")
-    ajouts = constructeur(surface,nuit=nuit)
+    ajouts = list(constructeur(surface,nuit=nuit))
+    extensions = list(chunks(corps(geo, EXTENSION)))
+    if ombres:
+        from ombres_majestic import cuire
+        ombres_cuites = cuire(g, surface, ajouts, nuit=nuit)
+        if ombres_cuites is not None:
+            remplacer(extensions, BIN_MESH, ombres_cuites)
     indice = ajouter_materiau(mats)
     faces = ajouter_triangles(g,ajouts,indice)
-    extensions = list(chunks(corps(geo, EXTENSION)))
     remplacer(extensions, BIN_MESH, ajouter_split(corps(extensions,BIN_MESH),faces,indice))
     remplacer(geo, EXTENSION, assembler(extensions))
     remplacer(geo, MATLIST, assembler(mats))
