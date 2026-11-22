@@ -9,7 +9,7 @@ const contact = cfg.contact, local = cfg.local;
 const noms = ["Rafa", "Mina", "Leon", "Vera"];
 const roles = ["garde rapproche", "soutien", "chauffeur", "veteran"];
 const grades = ["Inconnu", "Habitue", "Associe", "Capitaine", "Figure de Vice"];
-const initial = {generation:0, missions:mode==="Libre"?3:0, caisse:mode==="Libre"?1800:0, local:0, equipe:0, xp:0, reserve:0, biens:0, affecte:0};
+const initial = {generation:0, missions:mode==="Libre"?3:0, caisse:mode==="Libre"?1800:0, local:0, equipe:0, xp:0, reserve:0, biens:0, affecte:0, dossiers:0};
 function hash(s) {
     let value = 5381;
     for (let i=0;i<s.length;i++) value=(value*33+s.charCodeAt(i))>>>0;
@@ -21,10 +21,11 @@ function unpack(s) {
     if (hash(payload)!==summed) return null;
     const nums = payload.split(",").map(Number);
     if (nums.some(n=>!Number.isSafeInteger(n)||n<0) || nums[4]>1 || nums[5]>4) return null;
-    if (!((nums[0]===1 && nums.length===8) || (nums[0]===2 && nums.length===10))) return null;
-    const [,generation,missions,caisse,owned,equipe,xp,reserve,biens=0,affecte=0]=nums;
+    if (!((nums[0]===1 && nums.length===8) || (nums[0]===2 && nums.length===10) || (nums[0]===3 && nums.length===11))) return null;
+    const [,generation,missions,caisse,owned,equipe,xp,reserve,biens=0,affecte=0,dossiers=0]=nums;
+    if(dossiers>31 || ((dossiers&16)!==0 && (dossiers&15)!==15))return null;
     if(biens>3 || affecte>1 || (affecte && (!owned || !equipe)))return null;
-    return {generation,missions,caisse,local:owned,equipe,xp,reserve,biens,affecte};
+    return {generation,missions,caisse,local:owned,equipe,xp,reserve,biens,affecte,dossiers};
 }
 function readKey(file, key) {
     return N("READ_STRING_FROM_INI_FILE",dir+file,"atelier",key) || "";
@@ -48,7 +49,7 @@ function change(edit) {
     const next={...state};
     edit(next);
     next.generation++;
-    const p=[2,next.generation,next.missions,next.caisse,next.local,next.equipe,next.xp,next.reserve,next.biens,next.affecte].join(",");
+    const p=[3,next.generation,next.missions,next.caisse,next.local,next.equipe,next.xp,next.reserve,next.biens,next.affecte,next.dossiers].join(",");
     const key=next.generation%2 ? "a":"b", packed=p+"~"+hash(p);
     writeKey("progression.ini",key,packed);
     if (readKey("progression.ini",key)!==packed) {say("Sauvegarde indisponible. Reessaie avant de continuer.");return false;}
@@ -79,7 +80,10 @@ function quiet() {
     removePed(pedContact);pedContact=null; guards.forEach(removePed);guards=[];nettoyerEmployeRegie();
 }
 function openMenu(kind) {menu=kind;selected=0;holdOpen=false;}
-function brief() {if(mission && mission.kind==="reportage")return ["Viens au News Cafe en voiture avec une place libre.","Conduis Alma au repere et arrete la voiture.","Attends la descente de la journaliste."][mission.step];return mission ? (mission.step===0?"Recupere la bande au repere jaune.":"Rapporte la bande a Ines."):"Une cassette manque au programme de ce soir.";}
+function brief() {
+    if(mission && mission.kind==="dossier")return briefDossier(mission);
+    if(mission && mission.kind==="frequence")return frequencyBrief(mission);
+    if(mission && mission.kind==="reportage")return ["Viens au News Cafe en voiture avec une place libre.","Conduis Alma au repere et arrete la voiture.","Attends la descente de la journaliste."][mission.step];return mission ? (mission.step===0?"Recupere la bande au repere jaune.":"Rapporte la bande a Ines."):"Une cassette manque au programme de ce soir.";}
 function startJob(pos) {
     if(mission||!near(pos,contact,10))return;
     mission={kind:"bande",step:0,stop:clockNow()+cfg.delaiSecondes*1000,pick:cfg.collectes[state.missions%cfg.collectes.length]};
@@ -87,7 +91,9 @@ function startJob(pos) {
 }
 function tickJob(pos) {
     if(!mission)return;
+    if(mission.kind==="frequence"){tickFrequency(pos,N("GET_PLAYER_CHAR",0));return;}
     if(clockNow()>mission.stop){cancelJob("Delai expire. La radio te proposera une autre course.");return;}
+    if(mission.kind==="dossier"){tickDossier(pos);return;}
     if(mission.kind==="reportage"){tickReport(pos,N("GET_PLAYER_CHAR",0));return;}
     if(mission.step===0 && near(pos,mission.pick,5)) {
         mission.step=1;target(contact);say("Bande recuperee. Retourne voir Ines.");return;
@@ -116,7 +122,7 @@ function recruit(pos) {
 }
 function dismiss(){if(!state.equipe)return;if(change(s=>{s.equipe--;s.affecte=Math.min(s.affecte,s.equipe);})){removePed(guards.pop());if(!state.affecte)nettoyerEmployeRegie();say("Contrat termine.");}}
 function population(pos,player,now) {
-    if(!hubs.length){hubs=[mark(contact,5),mark(local,1),...propertyMapMarks()];}
+    if(!hubs.length){hubs=[mark(contact,5),mark(local,1),...propertyMapMarks(),quaiMapMark()];}
     if(near(pos,contact,75) && !alive(pedContact)){
         N("REQUEST_MODEL",21);
         if(N("HAS_MODEL_LOADED",21)) {
@@ -129,6 +135,7 @@ function population(pos,player,now) {
     const seatCount=vehicle?N("GET_MAXIMUM_NUMBER_OF_PASSENGERS",vehicle):0;
     let free=0;
     for(let seat=0;seat<seatCount;seat++)if(N("IS_CAR_PASSENGER_SEAT_FREE",vehicle,seat))free++;
+    if(vehicle && free>0 && garderPlaceMilo(pos))free--;
     tickEmployeRegie(pos);
     for(let i=premierGardeTerrain();i<state.equipe;i++){
         const model=[15,21,28,19][i];

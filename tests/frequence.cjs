@@ -12,7 +12,7 @@ function world({collectes,onMission,state={}}={}) {
     if(collectes)cfg.collectes=collectes;
     const disk=new Map(),peds=new Map(),blips=new Set(),spheres=new Set(),dead=new Set();
     const w={peds,blips,spheres,dead,disk,deleted:[],released:[],requested:0,modelFreed:0,loaded:true,inCar:false,
-        writable:true,time:100,playerPos:[0,0,0],unknown:[],said:[]};
+        writable:true,time:100,playerPos:[0,0,0],unknown:[],said:[],miloCar:null,car:45,freeSeat:true,speed:0,entrees:[],sorties:[]};
     let next=500;
     const ctx={
         CONFIG:cfg,log:()=>{},propertyIncome:()=>45,
@@ -24,7 +24,14 @@ function world({collectes,onMission,state={}}={}) {
             case "GET_PLAYER_CHAR":return 1;
             case "DOES_CHAR_EXIST":return a[0]===1||peds.has(a[0]);
             case "IS_CHAR_DEAD":return dead.has(a[0]);
-            case "IS_CHAR_IN_ANY_CAR":return w.inCar;
+            case "IS_CHAR_IN_ANY_CAR":return a[0]===1?w.inCar:w.miloCar!==null;
+            case "STORE_CAR_CHAR_IS_IN_NO_SAVE":return w.car;
+            case "IS_CHAR_IN_CAR":return w.miloCar===a[1];
+            case "GET_CAR_SPEED":return w.speed;
+            case "GET_MAXIMUM_NUMBER_OF_PASSENGERS":return 1;
+            case "IS_CAR_PASSENGER_SEAT_FREE":return w.freeSeat;
+            case "SET_CHAR_OBJ_ENTER_CAR_AS_PASSENGER":w.entrees.push(a);return;
+            case "SET_CHAR_OBJ_LEAVE_ANY_CAR":w.sorties.push(a[0]);return;
             case "REQUEST_MODEL":w.requested++;return;
             case "HAS_MODEL_LOADED":return w.loaded;
             case "MARK_MODEL_AS_NO_LONGER_NEEDED":w.modelFreed++;return;
@@ -52,7 +59,7 @@ function world({collectes,onMission,state={}}={}) {
     w.run("change(s=>{s.missions=1;s.local=1;s.equipe=1;s.affecte=1;})");
     for(const [k,v] of Object.entries(state))w.run("change(s=>{s."+k+"="+v+";})");
     w.start=()=>{w.playerPos=cfg.contact;return w.run("startFrequency(at(contact))");};
-    w.tick=p=>{w.playerPos=p;w.run("tickFrequency(at("+JSON.stringify(p)+"),1)");};
+    w.tick=p=>{w.time+=500;w.playerPos=p;w.run("tickJob(at("+JSON.stringify(p)+"))");};
     w.cfg=cfg;
     return w;
 }
@@ -150,7 +157,7 @@ test("paiement : sauvegarde indisponible puis reprise sans double credit",()=>{
 test("nettoyage : abandon, delai, Milo mort et mission Rockstar liberent PNJ, modele et reperes",()=>{
     const cas=[
         ["abandon",w=>{w.run("frequenceAbandon('Course abandonnee.')");}],
-        ["abandon par le coeur (clearFrequency puis cancelJob)",w=>{w.run("clearFrequency(mission);cancelJob('x')");}],
+        ["abandon depuis le journal",w=>{w.run("cancelJob('x')");}],
         ["delai",w=>{w.time=w.run("mission.stop")+1;w.tick(w.cfg.contact);}],
         ["Milo mort",w=>{w.dead.add([...w.peds.keys()][0]);w.tick(w.cfg.contact);}],
         ["mission Rockstar",w=>{w.ctx.ONMISSION=true;w.tick(w.cfg.contact);}]
@@ -175,6 +182,29 @@ test("nettoyage : abandon, delai, Milo mort et mission Rockstar liberent PNJ, mo
     // Delai ou Rockstar avant meme l'apparition de Milo.
     const x=world();x.start();x.ctx.ONMISSION=true;x.tick(x.cfg.contact);
     assert.equal(x.run("mission"),null);assert.equal(x.spheres.size,0);
+});
+
+test("Milo embarque dans une voiture arretee et descend avant le paiement au bon etage",()=>{
+    const w=world();w.start();const lieux=walkToMeeting(w), depart=lieux[lieux.length-1];
+    const milo=w.run("mission.milo"),caisse=w.run("state.caisse");
+    assert.match(w.run("brief()"),/place libre/);
+    w.inCar=true;w.freeSeat=false;w.tick(depart);
+    assert.equal(w.entrees.length,0);
+    w.freeSeat=true;w.speed=12;w.time+=1500;w.tick(depart);
+    assert.equal(w.entrees.length,0);
+    w.speed=0;w.time+=1500;w.tick(depart);w.tick(depart);
+    assert.deepEqual(w.entrees,[[milo,w.car]]);
+    w.miloCar=w.car;w.tick(depart);
+    assert.equal(w.run("mission.trajet"),"a_bord");
+    w.peds.set(milo,at(w.cfg.contact));w.tick(w.cfg.contact);
+    assert.equal(w.run("state.caisse"),caisse);
+    w.inCar=false;w.tick(w.cfg.contact);w.tick(w.cfg.contact);
+    assert.deepEqual(w.sorties,[milo]);
+    assert.equal(w.run("state.caisse"),caisse);
+    w.miloCar=null;w.peds.set(milo,{...at(w.cfg.contact),z:w.cfg.contact[2]+6});
+    w.tick(w.cfg.contact);assert.equal(w.run("state.caisse"),caisse);
+    w.peds.set(milo,at(w.cfg.contact));w.tick(w.cfg.contact);w.tick(w.cfg.contact);
+    assert.equal(w.run("state.caisse"),caisse+440);
 });
 
 test("commandes natives limitees au perimetre du projet",()=>{

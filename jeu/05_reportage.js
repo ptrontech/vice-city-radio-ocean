@@ -7,6 +7,8 @@ function seatAvailable(car){
 function cancelJob(text) {
     if(!mission)return;
     if(mission.kind==="reportage")removePed(mission.guest);
+    if(mission.kind==="frequence")clearFrequency(mission);
+    if(mission.kind==="dossier")finDossier(mission);
     clearObjective();mission=null;if(text)say(text);
 }
 function startReport(pos){

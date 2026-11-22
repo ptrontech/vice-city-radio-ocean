@@ -7,7 +7,7 @@ function askInes(question) {
     if(!clean){say("Entre un message ou choisis un sujet.");return;}
     const id=bootId+"-"+(++exchange);
     writeKey("requetes.ini","question",clean);
-    writeKey("requetes.ini","contexte",[state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve,state.biens,state.affecte].join(","));
+    writeKey("requetes.ini","contexte",[state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve,state.biens,state.affecte,state.dossiers].join(","));
     writeKey("requetes.ini","id",id);
     pending={id,at:Date.now(),question:clean};proposal="aucune";reply="Ines ecoute la frequence...";
 }
@@ -62,17 +62,27 @@ function drawMenu(pos) {
             if(near(pos,local,9))button("Visiter le local",()=>openMenu("local"));
             button("Sprint et endurance",()=>openMenu("sprint"));
             button("Locaux et visites",()=>openMenu("biens"));
+            button("Les voix de Vice",()=>openMenu("dossiers"));
+            if(temoinProche(pos))button("Parler au temoin",()=>openMenu("temoin"));
+            if(quaiPlace(pos))button("Radio du ponton",()=>openMenu("quai"));
             if(state.equipe)button("Ordres a l'equipe",()=>openMenu("equipe"));
-            if(mission)button("Abandonner la livraison",()=>cancelJob("Course abandonnee."));
+            if(mission)button("Abandonner le contrat",()=>cancelJob("Course abandonnee."));
         }else if(menu==="contact"){
             ImGui.TextWrapped("Ines Vega  |  Productrice de la radio pirate d'Ocean Beach");
             ImGui.TextWrapped(mission?brief():"Le bateau apporte les bandes. Il faut les ramener au studio avant la prochaine emission.");
             if(!mission)button("Accepter la course  +"+cfg.prime+" $",()=>startJob(pos));
+            if(!mission && state.missions>=1)button("Retrouver Milo  +"+primeFrequence+" $",()=>startFrequency(pos));
+            if(mission && mission.kind==="dossier" && mission.step===1)button("Remettre la bande a Ines",()=>remettreDossier(pos));
+            button("Les voix de Vice",()=>openMenu("dossiers"));
             button("Discuter avec Ines",()=>openMenu("radio"));
             button("Sprint et endurance",()=>openMenu("sprint"));
             if(state.equipe<capacity() && state.caisse>=cfg.prixGarde)button("Recruter "+noms[state.equipe]+"  "+cfg.prixGarde+" $",()=>recruit(pos));
             else ImGui.TextWrapped("Equipe : "+state.equipe+" / "+capacity()+". Recrutement : "+cfg.prixGarde+" $.");
             if(state.equipe)button("Ordres a l'equipe",()=>openMenu("equipe"));
+        }else if(menu==="dossiers"||menu==="temoin"){
+            menuDossiers(pos);
+        }else if(menu==="quai"){
+            drawQuaiMenu(pos);
         }else if(menu==="sprint"){
             drawSprintMenu();
         }else if(isPropertyMenu(menu)){
@@ -106,6 +116,7 @@ function drawMenu(pos) {
                 button("Envoyer le message",()=>askInes(q));
                 button("Du travail ce soir ?",()=>askInes("Tu as du travail pour moi ce soir ?"));
                 button("Tu te souviens de mes courses ?",()=>askInes("Tu te souviens de mon travail pour la radio ?"));
+                if(state.dossiers)button("Et nos temoignages ?",()=>askInes("Tu te souviens des temoignages des Voix de Vice ?"));
                 if(proposal==="livraison"&&!mission&&near(pos,contact,10))button("Accepter la course proposee",()=>startJob(pos));
                 if(proposal==="bilan"||proposal==="local")button("Consulter le journal",()=>openMenu("journal"));
                 if(proposal==="visites")button("Voir les locaux",()=>openMenu("biens"));
@@ -131,14 +142,19 @@ function tick() {
         if(essai==="reprise"){
             if(!repriseVerifiee){
                 const attendu=readKey("essai.ini","attendu");
-                const actuel=[state.generation,state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve,state.biens,state.affecte].join(",");
+                const colonnes=[state.generation,state.missions,state.caisse,state.local,state.equipe,state.xp,state.reserve,state.biens,state.affecte];
+                if(attendu.split(",").length===10)colonnes.push(state.dossiers);
+                const actuel=colonnes.join(",");
                 verdict("deux baux et acteurs apres relance "+actuel,actuel===attendu&&state.biens===3);
                 repriseVerifiee=true;
             }
-        }else if(essai==="quartier")testQuartier(player,free);
+        }else if(essai==="dossiers")testDossiers(player,free);
+        else if(essai==="frequence")testFrequence(player,free);
+        else if(essai==="quartier")testQuartier(player,free);
         else testTick(playing,player,free,now);
     }
     if(benchOnly)return;
+    tickQuai(playing && alive(player)?posOf(player):null,free,now);
     tickSprint(player,free,now);
     if(!free){
         if(ready){quiet();if(captured){ImGui.BeginFrame("VC_RADIO_OCEAN");ImGui.SetCursorVisible(0);ImGui.EndFrame();captured=false;}log("Radio Ocean | suspendu pendant la campagne");}
@@ -150,9 +166,9 @@ function tick() {
     tickMenuKeys();
     if(now>=nextWorld||now+1500<nextWorld){
         nextWorld=now+500;population(pos,player,now);pollReply();
-        const place=near(pos,contact,5)?"contact":near(pos,local,5)?"local":propertyPlace(pos);
-        if(place && !recentHub && !menu && !N("IS_CHAR_IN_ANY_CAR",player) && (mode!=="Validation"||testStep===99))openMenu(place);
-        if(!place && (["contact","local","achat","radio"].includes(menu)||(isPropertyMenu(menu)&&menu!=="biens")))menu="";
+        const place=temoinProche(pos)?"temoin":near(pos,contact,5)?"contact":near(pos,local,5)?"local":propertyPlace(pos)||quaiPlace(pos);
+        if(place && place!==recentHub && !menu && !N("IS_CHAR_IN_ANY_CAR",player) && (mode!=="Validation"||testStep===99))openMenu(place);
+        if(!place && (["contact","local","achat","radio","temoin","quai"].includes(menu)||(isPropertyMenu(menu)&&menu!=="biens")))menu="";
         recentHub=place;
     }
     tickJob(pos);

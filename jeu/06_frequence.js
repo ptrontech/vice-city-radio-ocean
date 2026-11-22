@@ -41,7 +41,7 @@ function frequencyBrief(m = mission) {
     const n = m.places.length;
     if (m.step < n - 1) return "Indice " + (m.step + 1) + "/" + (n - 1) + " : " + m.clue + " Va au repere jaune.";
     if (m.step === n - 1) return "Trouve Milo a pied au repere jaune. " + m.clue;
-    return "Ramene Milo a Ines. Il doit rester pres de toi.";
+    return "Ramene Milo a Ines, a pied ou en voiture. Garde une place libre et descendez devant la radio.";
 }
 
 function startFrequency(pos) {
@@ -51,6 +51,7 @@ function startFrequency(pos) {
     if (places.length < 2) return false;
     mission = {
         kind: "frequence", step: 0, places, milo: null, model: false, paid: false, nextHint: 0,
+        trajet: "a_pied", voiture: null, prochainOrdre: 0, prochaineVerification: 0,
         clue: indicesFrequence[0], stop: clockNow() + cfg.delaiSecondes * 1000
     };
     target(places[0]);
@@ -71,7 +72,6 @@ function clearFrequency(m = mission) {
 }
 
 function frequenceAbandon(text) {
-    clearFrequency(mission);
     cancelJob(text);
 }
 
@@ -82,7 +82,7 @@ function frequenceSpawnMilo(m) {
     }
     if (!N("HAS_MODEL_LOADED", modeleMilo)) return;
     const p = m.places[m.places.length - 1];
-    const h = N("CREATE_CHAR", 5, modeleMilo, p[0] + 1.5, p[1], ground(p));
+    const h = N("CREATE_CHAR", 4, modeleMilo, p[0] + 1.5, p[1], ground(p));
     N("MARK_MODEL_AS_NO_LONGER_NEEDED", modeleMilo);
     m.model = false;
     if (!alive(h)) {
@@ -92,6 +92,53 @@ function frequenceSpawnMilo(m) {
     N("SET_CHAR_HEADING", h, 95);
     N("SET_CHAR_OBJ_WAIT_ON_FOOT", h);
     m.milo = h;
+}
+
+function miloAuMemeNiveau(pos, milo, rayon) {
+    return Math.abs(pos.z - milo.z) < 4.5 && Math.hypot(pos.x - milo.x, pos.y - milo.y) <= rayon;
+}
+
+function garderPlaceMilo(pos) {
+    if (!mission || mission.kind !== "frequence" || mission.step !== mission.places.length) return false;
+    const milo = mission.milo;
+    return alive(milo) && !N("IS_CHAR_IN_ANY_CAR", milo) && miloAuMemeNiveau(pos, posOf(milo), 22);
+}
+
+function deplacerMilo(m, pos, player) {
+    const t = clockNow();
+    if (t < m.prochaineVerification) return;
+    m.prochaineVerification = t + 350;
+    const miloEnVoiture = N("IS_CHAR_IN_ANY_CAR", m.milo);
+    const voiture = N("IS_CHAR_IN_ANY_CAR", player) ? N("STORE_CAR_CHAR_IS_IN_NO_SAVE", player) : null;
+    if (voiture === null && !miloEnVoiture) {
+        if (m.trajet !== "a_pied") {
+            N("SET_CHAR_OBJ_NO_OBJ", m.milo);
+            N("SET_CHAR_AS_LEADER", m.milo, player);
+        }
+        m.trajet = "a_pied";
+        m.voiture = null;
+        return;
+    }
+    if (voiture !== null && miloEnVoiture && N("IS_CHAR_IN_CAR", m.milo, voiture)) {
+        m.trajet = "a_bord";
+        m.voiture = voiture;
+        return;
+    }
+    if (miloEnVoiture) {
+        if (m.trajet !== "descente" || t >= m.prochainOrdre) {
+            N("SET_CHAR_OBJ_LEAVE_ANY_CAR", m.milo);
+            m.trajet = "descente";
+            m.prochainOrdre = t + 3200;
+        }
+        return;
+    }
+    if (voiture === null || (voiture === m.voiture && t < m.prochainOrdre)) return;
+    m.voiture = voiture;
+    m.prochainOrdre = t + 1200;
+    if (Math.abs(N("GET_CAR_SPEED", voiture)) > 2.5 || !miloAuMemeNiveau(pos, posOf(m.milo), 22) || !seatAvailable(voiture)) return;
+    N("SET_CHAR_OBJ_ENTER_CAR_AS_PASSENGER", m.milo, voiture);
+    m.trajet = "embarquement";
+    m.prochainOrdre = t + 3200;
 }
 
 function frequenceRegler(m) {
@@ -139,7 +186,7 @@ function tickFrequency(pos, player) {
         }
         if (N("IS_CHAR_IN_ANY_CAR", player)) return;
         const milo = N("GET_CHAR_COORDINATES", m.milo);
-        if (!near(pos, lieu, 6) || Math.hypot(pos.x - milo.x, pos.y - milo.y) > distanceRencontreMilo) return;
+        if (!near(pos, lieu, 6) || !miloAuMemeNiveau(pos, milo, distanceRencontreMilo)) return;
         m.step = n;
         N("SET_CHAR_OBJ_NO_OBJ", m.milo);
         N("SET_CHAR_AS_LEADER", m.milo, player);
@@ -147,9 +194,10 @@ function tickFrequency(pos, player) {
         say("Milo : l'emetteur est sauf. Ramene-moi chez Ines. " + frequencyBrief(m));
         return;
     }
-    if (!near(pos, contact, 5)) return;
-    const milo = N("GET_CHAR_COORDINATES", m.milo);
-    if (Math.hypot(pos.x - milo.x, pos.y - milo.y) > distanceRetourMilo) {
+    deplacerMilo(m, pos, player);
+    if (!near(pos, contact, 5) || N("IS_CHAR_IN_ANY_CAR", player) || N("IS_CHAR_IN_ANY_CAR", m.milo)) return;
+    const milo = posOf(m.milo);
+    if (!miloAuMemeNiveau(pos, milo, distanceRetourMilo)) {
         const t = clockNow();
         if (t >= m.nextHint) { m.nextHint = t + 4000; say("Milo est reste en arriere. Attends-le devant Ines."); }
         return;

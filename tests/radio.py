@@ -102,4 +102,20 @@ class RadioTests(unittest.TestCase):
             codes={row[0] for row in db.execute("SELECT code FROM souvenirs")}
             self.assertEqual(codes, {"regie","disquaire","trois","huit"})
 
+    def test_v3_dossiers_et_reponse_sans_inventer_une_rencontre(self):
+        from radio import fallback, observe_save, observe
+        with tempfile.TemporaryDirectory() as tmp, closing(sqlite3.connect(":memory:")) as db:
+            folder = Path(tmp)
+            write_ini(folder/"progression.ini", {"a":"3,20,13,2210,1,1,10,1600,3,0,15~gqu31q"})
+            observe_save(db,folder)
+            faits={"missions":13,"propriete":1,"souvenirs_confirmes":observe(db,13,1,1,3)}
+            self.assertIn("Drita Kodra",fallback(faits,"Tu te souviens de Kodra ?")[0])
+            self.assertIn("aucune diffusion",fallback(faits,"On a deja diffuse Pablo Escobar ?")[0])
+            write_ini(folder/"progression.ini", {"a":"3,21,14,3010,1,1,11,1830,3,0,31~sa7df"})
+            observe_save(db,folder)
+            faits["souvenirs_confirmes"]=observe(db,14,1,1,3)
+            ligne,intention=fallback(faits,"Tu te souviens de Pablo ?")
+            self.assertIn("diffuse le temoignage de Pablo Escobar",ligne)
+            self.assertEqual(intention,"aucune")
+
 if __name__=="__main__":unittest.main()

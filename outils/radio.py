@@ -23,12 +23,23 @@ SOUVENIRS = {
     "vingtcinq": "La radio a atteint le palier des vingt-cinq emissions.",
 }
 
-def observe(db, missions, regie, gardes, droits):
+DOSSIERS_RADIO = (
+    (1, "kodra", "Drita Kodra", r"kodra|albanais"),
+    (2, "volna", "Viktor Orlov", r"volna|viktor|orlov|russe"),
+    (4, "faroles", "Marisol Vega", r"faroles|marisol|portoric"),
+    (8, "mangle", "Emilio Rios", r"mangle|emilio|rios|mexic"),
+    (16, "medellin", "Pablo Escobar", r"medellin|pablo|escobar"),
+)
+SOUVENIRS.update({code: f"Nous avons diffuse le temoignage de {nom} dans Les voix de Vice."
+                  for _, code, nom, _ in DOSSIERS_RADIO})
+
+def observe(db, missions, regie, gardes, droits, dossiers=0):
     """Conserver des faits établis par un état du jeu."""
     db.execute("CREATE TABLE IF NOT EXISTS souvenirs (code TEXT PRIMARY KEY)")
     attained = {"rafa": gardes > 0, "regie": bool(regie), "suite": bool(droits & 1),
                 "disquaire": bool(droits & 2), "trois": missions >= 3, "huit": missions >= 8,
                 "quinze": missions >= 15, "vingtcinq": missions >= 25}
+    attained.update({code: bool(dossiers & bit) for bit, code, _, _ in DOSSIERS_RADIO})
     db.executemany("INSERT OR IGNORE INTO souvenirs (code) VALUES (?)",
                    ((code,) for code, reached in attained.items() if reached))
     known = {row[0] for row in db.execute("SELECT code FROM souvenirs")}
@@ -50,13 +61,16 @@ def observe_save(db, folder):
         if not all(field.isdecimal() for field in fields):
             continue
         values = list(map(int, fields))
-        if (values[0], len(values)) not in ((1, 8), (2, 10)):
+        if (values[0], len(values)) not in ((1, 8), (2, 10), (3, 11)):
             continue
         missions, regie, gardes = values[2], values[4], values[5]
-        droits, affecte = values[8:10] if values[0] == 2 else (0, 0)
+        droits, affecte = values[8:10] if values[0] >= 2 else (0, 0)
+        dossiers = values[10] if values[0] == 3 else 0
+        if dossiers > 31 or (dossiers & 16 and dossiers & 15 != 15):
+            continue
         if regie > 1 or gardes > 4 or droits > 3 or affecte > 1 or (affecte and not (regie and gardes)):
             continue
-        observe(db, missions, regie, gardes, droits)
+        observe(db, missions, regie, gardes, droits, dossiers)
 
 def asciify(text):
     return unicodedata.normalize("NFKD", str(text)).encode("ascii","ignore").decode()
@@ -94,6 +108,13 @@ def recall_options(question, context):
     if not re.search(r"\b(souven|souvien|rappel|premier|autrefois|auparavant|deja|debut|jadis)", words):
         return []
     known = context.get("souvenirs_confirmes", [])
+    sujets = [(code, nom) for _, code, nom, pattern in DOSSIERS_RADIO if re.search(pattern, words)]
+    if sujets:
+        return [SOUVENIRS[code] if SOUVENIRS[code] in known else
+                f"Je n'ai aucune diffusion enregistree pour {nom}." for code, nom in sujets]
+    if re.search(r"voix de vice|factions|temoignages|quelles bandes", words):
+        bandes = [SOUVENIRS[code] for _, code, _, _ in DOSSIERS_RADIO if SOUVENIRS[code] in known]
+        return bandes or ["Aucune des cinq bandes des Voix de Vice n'a encore ete diffusee."]
     if re.search(r"\b(rafa|garde|recru|equipe)", words):
         then = SOUVENIRS["rafa"] if SOUVENIRS["rafa"] in known else "Je n'ai encore aucun recrutement consigne."
         if not context.get("gardes"):
@@ -177,17 +198,18 @@ def serve_once(folder,db,model):
         q=safe_line(req.get("question",""),150)
         try:
             numbers=[int(n) for n in req["contexte"].split(",")]
-            if len(numbers) not in (6,8) or any(n<0 for n in numbers) or not q:return
-            if len(numbers)==6:numbers.extend((0,0))
+            if len(numbers) not in (6,8,9) or any(n<0 for n in numbers) or not q:return
+            numbers.extend([0]*(9-len(numbers)))
         except (KeyError,ValueError):return
-        ctx=dict(zip(("missions","caisse","propriete","gardes","experience","recettes","droits","rafa_en_regie"),numbers))
+        ctx=dict(zip(("missions","caisse","propriete","gardes","experience","recettes","droits","rafa_en_regie","dossiers"),numbers))
         ctx["droit_ocean_view"]=bool(numbers[6]&1)
         ctx["droit_centre_commercial"]=bool(numbers[6]&2)
         if (numbers[2] > 1 or numbers[3] > 4 or numbers[6] > 3 or numbers[7] > 1
-                or numbers[7] and not (numbers[2] and numbers[3])):
+                or numbers[7] and not (numbers[2] and numbers[3])
+                or numbers[8] > 31 or (numbers[8] & 16 and numbers[8] & 15 != 15)):
             return
         with db:
-            ctx["souvenirs_confirmes"]=observe(db,numbers[0],numbers[2],numbers[3],numbers[6])
+            ctx["souvenirs_confirmes"]=observe(db,numbers[0],numbers[2],numbers[3],numbers[6],numbers[8])
         history=db.execute("SELECT question,reponse FROM echanges ORDER BY rowid DESC LIMIT 3").fetchall()[::-1]
         row=answer(q,ctx,history,model)
         db.execute("INSERT INTO echanges(id,question,reponse,intention,origine) VALUES(?,?,?,?,?)",(ident,q,*row))
