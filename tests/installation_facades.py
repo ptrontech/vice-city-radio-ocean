@@ -1,6 +1,7 @@
 """L’essai sur l’archive personnelle est activé par VICE_CITY_ORIGINE."""
 from hashlib import sha256
 from math import hypot
+from struct import unpack_from
 import os
 from pathlib import Path
 import sys
@@ -12,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "outils"))
 import facades
 import ancrage_majestic
 import relief_majestic
+import vitrages_majestic as vitrages
 import installer_facades
 import maillage_rw
 from marquise_majestic import prolonger_marquise
@@ -103,7 +105,10 @@ class Installation(unittest.TestCase):
                 if nom in installer_facades.MODELES:
                     original, relief = maillage_rw.lire_surface(a), maillage_rw.lire_surface(b)
                     self.assertEqual(relief["positions"][:len(original["positions"])], original["positions"])
-                    self.assertEqual(relief["materiaux"][:-1], original["materiaux"])
+                    nuit = installer_facades.MODELES[nom]
+                    anciens = tuple(vitrages.nom_natif(vitrages.MATERIAUX[m][0], nuit)
+                                    if m in vitrages.MATERIAUX else m for m in original["materiaux"])
+                    self.assertEqual(relief["materiaux"][:-1], anciens)
                     # La cuisson subdivise la surface réceptrice, sans changer les
                     # dimensions de chacune des surfaces de matériau originales.
                     for a0, a1 in zip(aires_par_materiau(original), aires_par_materiau(relief)):
@@ -129,6 +134,22 @@ class Installation(unittest.TestCase):
                     self.assertGreater(len(relief["triangles"]), len(original["triangles"]))
                     self.assertEqual(len(relief["materiaux"]), len(original["materiaux"]) + 1)
                     continue
+                if nom in installer_facades.EFFETS_PALMIER:
+                    fin = 12 + unpack_from("<I", b, 4)[0]
+                    self.assertEqual(b[:fin], installer_facades.EFFETS_PALMIER[nom](a))
+                    self.assertNotEqual(a[:fin], b[:fin])
+                    continue
+                if nom == "od_hotels1.txd":
+                    intermediaire = facades.ameliorer_txd(nom, a, exiger_empreinte=True)
+                    def natives_txd(blob):
+                        return {n: inner for _, _, inner, n, _ in textures.natives(textures.dictionary(blob)[1])}
+                    anciens = natives_txd(intermediaire)
+                    installes = natives_txd(b)
+                    self.assertEqual({n: installes[n] for n in anciens}, anciens)
+                    attendus = {vitrages.nom_natif(type_baie, nuit)
+                                for type_baie, *_ in vitrages.MATERIAUX.values() for nuit in (False, True)}
+                    self.assertEqual(installes.keys() - anciens.keys(), attendus)
+                    b = intermediaire
                 mesures = facades.verifier(a, b, facades.MATERIAUX[nom])
                 self.assertTrue(mesures["empreinte_origine"])
                 self.assertTrue(mesures["niveau_origine_identique"])

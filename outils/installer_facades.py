@@ -14,6 +14,8 @@ import relief_majestic
 import ancrage_majestic
 from marquise_majestic import prolonger_marquise
 from enseigne_majestic import construire_enseigne
+from palmier_majestic import EFFETS_PALMIER
+import vitrages_majestic as vitrages
 import textures
 
 
@@ -23,8 +25,16 @@ VOIRIE = {
     "gta3.dir": "701e78baac57058da11561401d7d5037d78b83105699345c902afd67e92140a3",
     "generic.txd": "d89128361e02a64059b0f283c4c562925dc1e7f6e303be82b48f3f14ef083a02",
 }
-# Variantes posées avant l'ajout du relief : seules ces paires d'empreintes sont migrées.
+# Profils générés depuis les originaux reconnus. Une migration n’accepte que ces paires.
 HISTORIQUE = {
+    "1f5f2faf16b0b45563ee37698fe7fda77305fc5cbd65c28294fd8b2348574581":
+        "f384be9a3f3fb94b2e80e5cca07ceb3b59bfdf3ba9ae7cfb4fdd714d281cccc5",
+    "a01dae9d405da1f0a51e071fc40908c311835610a9b362a4f1ae85b35aff96bd":
+        "f384be9a3f3fb94b2e80e5cca07ceb3b59bfdf3ba9ae7cfb4fdd714d281cccc5",
+    "cdd3ee56ffaa66aafa189d56a414b310b19c8026d7ae4f10e497e7f1edb69a3d":
+        "2e543d03ff571b9e9fb1e7ba533c34fd0019a928ccc39c4658d4afc25883f746",
+    "465f24831d27c649385e29022a12c0ee54b12af142afd43ccfa44187bc841dfc":
+        "5a072849da21d300ad88164bc328954771ca4a2f6489fc74e57ad2907f8cc87e",
     "361d726a1315ec219cd2c3993dc24ea5c280df87effc481267c963cce3f2ea37":
         "8acf620c68b09c03aa325fca03e55de89185fa87dfd5701477ee19a8defb9bb0",
     "6ea086b9f735424124c2436bcf4d286092502965739ea6eeb8894d6aa08284e4":
@@ -34,7 +44,7 @@ HISTORIQUE = {
 }
 TAILLE_VOIRIE = 327_487_488 + 641_024
 MODELES = {"od_majestic2c_dy.dff": False, "od_majestic2c_nt.dff": True}
-ENTREES = set(TXD_CIBLES) | set(MODELES)
+ENTREES = set(TXD_CIBLES) | set(MODELES) | set(EFFETS_PALMIER)
 
 
 @contextmanager
@@ -112,9 +122,16 @@ def produire_secteurs(source, index_original):
             if len(entree) != nombre * textures.SECTOR:
                 raise ValueError(f"Entrée originale tronquée : {nom}")
             if nom in MODELES:
-                ameliore = appliquer_relief(entree, nuit=MODELES[nom], constructeur=construire_architecture)
+                nuit = MODELES[nom]
+                depli = vitrages.preparer_uv(entree)
+                relief = appliquer_relief(depli, nuit=nuit, constructeur=construire_architecture)
+                ameliore = vitrages.nommer_vitrages(relief, nuit)
+            elif nom in EFFETS_PALMIER:
+                ameliore = EFFETS_PALMIER[nom](entree)
             else:
                 ameliore = ameliorer_txd(nom, entree, exiger_empreinte=True)
+                if nom == "od_hotels1.txd":
+                    ameliore = vitrages.ajouter_vitrages(ameliore)
             compte = (len(ameliore) + textures.SECTOR - 1) // textures.SECTOR
             pointeurs[i] = ((TAILLE_VOIRIE + len(secteurs)) // textures.SECTOR, compte)
             secteurs.extend(ameliore)
@@ -170,6 +187,10 @@ def composer(source, destination, actives):
         actuel = fichier.read(len(supplement) + 1)
     if actuel and actuel != supplement and not migrer:
         raise ValueError("Des secteurs étrangers suivent l’archive de voirie")
+    # Un jeu d’éléments graphiques connu peut aussi être la configuration
+    # demandée. Dans ce cas, ne réécrire ni l’archive ni les dates des fichiers.
+    if actuel == supplement:
+        migrer = False
     cible_img = entier.hexdigest() if actives else VOIRIE["gta3.img"]
     cible_dir = index_facades if actives else index_voirie
 
