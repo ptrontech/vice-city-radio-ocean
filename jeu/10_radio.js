@@ -153,6 +153,9 @@ function tick() {
         else if(essai==="majestic")testMajestic(player,free);
         else if(essai==="volumes"){testVolumes(player,free);return;}
         else if(essai==="seuil"){testSeuil(player,free);return;}
+        else if(essai==="vie"){testVieMajestic(player,free,now);return;}
+        else if(essai==="voitures"){testVoitures1986(player,free,now);return;}
+        else if(essai==="facades"){testFacadesVille(player,free,now);return;}
         else if(essai==="contrats")testContrats(player,free);
         else if(essai==="frequence")testFrequence(player,free);
         else if(essai==="quartier")testQuartier(player,free);
@@ -162,6 +165,7 @@ function tick() {
     tickQuai(playing && alive(player)?posOf(player):null,free,now);
     tickSprint(player,free,now);
     if(!free){
+        fermerMajestic();
         if(ready){quiet();if(captured){ImGui.BeginFrame("VC_RADIO_OCEAN");ImGui.SetCursorVisible(0);ImGui.EndFrame();captured=false;}log("Radio Ocean | suspendu pendant la campagne");}
         ready=false;recentHub="";return;
     }
@@ -173,7 +177,7 @@ function tick() {
     if(!firstHint){showTextBox("Radio Ocean : retrouve Ines sur Ocean Drive. Journal : touche configuree dans le lanceur.");firstHint=true;}
     tickMenuKeys();
     if(now>=nextWorld||now+1500<nextWorld){
-        nextWorld=now+500;population(pos,player,now);pollReply();
+        nextWorld=now+500;population(pos,player,now);vieMajestic(pos,now);pollReply();
         const place=temoinProche(pos)?"temoin":near(pos,contact,5)?"contact":near(pos,local,5)?"local":propertyPlace(pos)||quaiPlace(pos);
         if(place && place!==recentHub && !menu && !N("IS_CHAR_IN_ANY_CAR",player) && (mode!=="Validation"||testStep===99))openMenu(place);
         if(!place && (["contact","local","achat","radio","temoin","quai"].includes(menu)||(isPropertyMenu(menu)&&menu!=="biens")))menu="";

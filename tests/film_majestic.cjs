@@ -19,7 +19,7 @@ test("les caméras et le test du seuil quittent l’intérieur de la sauvegarde 
             menu: "",
             bootId: "essai"
         });
-        for (const nom of ["82_essai_volume.js", "81_essai_seuil.js"]) {
+        for (const nom of ["14_vie_majestic.js", "82_essai_volume.js", "81_essai_seuil.js"]) {
             const source = fs.readFileSync(path.join(__dirname, "..", "jeu", nom), "utf8");
             vm.runInContext(source, contexte);
         }

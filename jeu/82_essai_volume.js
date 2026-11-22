@@ -11,9 +11,7 @@ function interpolationVolume(a,b,t) {
     return a.map((v,i)=>v+(b[i]-v)*t);
 }
 function mondeHallVolume(p) {
-    // Origine du seuil et rotation mesurées dans le DFF et l'IPL d'Ocean Drive.
-    const [x,y,z]=p;
-    return [275.031377+.987604921*x+.156960251*y,-987.298706-.156960251*x+.987604921*y,10.870894+z];
+    return mondeMajestic(p);
 }
 function cadreVolume(nom,t) {
     // Accélération courte aux extrémités, vitesse uniforme sur le reste du travelling.
