@@ -16,6 +16,11 @@ from textures import chunks, wrap
 NOM = "veg_palmkbb11.dff"
 SOURCE = ("kbbark_test1", "fuzzyplant256")
 TAU = 2*pi
+BUDGET_TRIANGLES = 5000
+# Les couleurs de sommets s’ajoutent à la lumière fixe de Vice City. Ces
+# coefficients sont calibrés sur les vues de 14 h et 22 h devant le Majestic.
+LUMIERE_ECORCE = (.14, 0., .20)
+LUMIERE_PALMES = (.10, 0., .16)
 
 
 @dataclass(frozen=True)
@@ -121,7 +126,7 @@ def construire_tronc(m,forme):
             a=TAU*(j%10)/10
             irreg=1+.017*sin(3*a+.55)
             xyz=(cx+rx*rayon*relief*irreg*cos(a),cy+ry*rayon*relief*irreg*sin(a),z)
-            rgb=couleur((172,162,132) if t<.79 else (122,145,91),ton*(.94+.06*cos(a-.6)))
+            rgb=couleur((107,100,83) if t<.79 else (72,87,54),ton*(.94+.06*cos(a-.6)))
             result.append(sommet(xyz,rgb,(j/10,(z-z0)*.98)))
         ronds.append(result)
     for bas,haut in zip(ronds,ronds[1:]):
@@ -144,13 +149,13 @@ def palme(m,coeur,angle,longueur,arche,chute,paires,teinte,variation):
 
     # Rachis triangulaire fermé ; l'arête claire suit sa courbure.
     sections=[]
-    for i in range(8):
-        t=i/7
+    for i in range(7):
+        t=i/6
         x,y,z=point(t)
         ep=.008+.048*(1-t)**1.4
         sections.append([sommet((x+travers[0]*ep,y+travers[1]*ep,z),couleur(teinte,.86)),
                          sommet((x-travers[0]*ep,y-travers[1]*ep,z),couleur(teinte,.86)),
-                         sommet((x,y,z+ep*.95),couleur(teinte,1.40))])
+                         sommet((x,y,z+ep*.95),couleur(teinte,1.24))])
     for a,b in zip(sections,sections[1:]):
         for j in range(3):
             k=(j+1)%3
@@ -159,25 +164,39 @@ def palme(m,coeur,angle,longueur,arche,chute,paires,teinte,variation):
 
     for i in range(paires):
         for cote in (-1,1):
-            t=.10+.82*(i+(.23 if cote>0 else 0))/(paires-1+.24)
+            # Des insertions alternées décalent les deux bords d’une même palme.
+            ecart=(.32 if cote>0 else 0)+.18*sin(variation+i*.84+cote)
+            t=.075+.86*(i+ecart)/(paires-.50)
             x,y,z=point(t)
-            l=(.23+.52*sin(pi*t)**.77)*(1-.36*t)*(1+.09*sin(variation+i*2.1+cote))
-            dx=radial[0]*(.25+.34*t)+travers[0]*cote
-            dy=radial[1]*(.25+.34*t)+travers[1]*cote
+            l=(.25+.61*sin(pi*t)**.79)*(1-.32*t)*(1+.13*sin(variation+i*2.1+cote))
+            sweep=.19+.55*t+.20*cos(variation+i*.73+cote)
+            direction=angle+.17*sin(variation)*sin(pi*t)+.13*cos(variation+.4)*t*t
+            dx=cos(direction)*sweep-sin(direction)*cote
+            dy=sin(direction)*sweep+cos(direction)*cote
             h=hypot(dx,dy)
             dx,dy=dx/h,dy/h
             lx,ly=-dy,dx
-            pente=l*(.29+.28*t+.10*cos(variation+i))
-            largeur=(.037+.024*sin(pi*t))* (1+.10*sin(variation+i))
-            ton=1+.075*sin(variation+1.31*i+cote*.4)
-            base=sommet((x,y,z+.008),couleur(teinte,.79*ton))
-            pointe=sommet((x+dx*l,y+dy*l,z-pente),couleur(teinte,1.24*ton))
-            xm,ym=x+.39*l*dx,y+.39*l*dy
-            zm=z+.045-.26*pente
-            e1=sommet((xm+lx*largeur,ym+ly*largeur,zm+.020),couleur(teinte,1.12*ton))
-            e2=sommet((xm-lx*largeur,ym-ly*largeur,zm-.014),couleur(teinte,.88*ton))
-            m.feuille(base,pointe,e1)
-            m.feuille(base,e2,pointe)
+            pente=l*(.34+.34*t+.14*cos(variation+i*.6+cote))
+            largeur=(.029+.021*sin(pi*t))*(1+.13*sin(variation+i))
+            ton=1+.10*sin(variation+1.31*i+cote*.4)
+            base=sommet((x,y,z+.008),couleur(teinte,.75*ton))
+            pointe=sommet((x+dx*l,y+dy*l,z-pente),couleur(teinte,1.20*ton))
+            lateral=.095*l*sin(variation+i*.72+cote*.8)
+            xm=x+.45*l*dx+lateral*lx
+            ym=y+.45*l*dy+lateral*ly
+            zm=z+.085*l-.23*pente
+            e1=sommet((xm+lx*largeur,ym+ly*largeur,zm+.016),couleur(teinte,1.08*ton))
+            e2=sommet((xm-lx*largeur,ym-ly*largeur,zm-.014),couleur(teinte,.82*ton))
+            if .22<t<.82 and (i+cote)%3==0:
+                # Une articulation sur les longues folioles accentue leur arc.
+                nervure=sommet((xm,ym,zm+.035*l),couleur(teinte,1.04*ton))
+                m.feuille(base,nervure,e1)
+                m.feuille(base,e2,nervure)
+                m.feuille(nervure,pointe,e1)
+                m.feuille(nervure,e2,pointe)
+            else:
+                m.feuille(base,pointe,e1)
+                m.feuille(base,e2,pointe)
 
 
 def construire_palmes(forme):
@@ -185,26 +204,27 @@ def construire_palmes(forme):
     cx,cy,cz=construire_tronc(m,forme)
     # Les vieilles palmes tombent sous le cœur ; les adultes s'étalent, les
     # jeunes se dressent. L'angle de chaque couronne décale les rangées.
-    niveaux=((6, .27, 2.12, .64,-2.31,12,(99,117,55)),
-             (7, .82, 2.10,1.00,-.64,14,(72,119,55)),
-             (4,1.35, 1.58,1.10, .60,12,(95,139,62)))
+    niveaux=((7, .27, 2.08, .73,-2.35,14,(48,67,26)),
+             (9, .82, 2.10,1.05,-.70,16,(31,69,34)),
+             (5,1.35, 1.63,1.13, .61,14,(49,88,39)))
     for rang,(n,depart,l,a,d,nb,base) in enumerate(niveaux):
         for j in range(n):
             phase=1.73+j*2.37+rang*1.52
             angle=depart+TAU*j/n+.12*sin(phase)
-            ton=(126,125,65) if rang==0 and j in (1,4) else base
-            palme(m,(cx,cy,cz+rang*.12),angle,l*(1+.065*sin(phase+.5)),a,
-                  d*(1+.08*cos(phase)),nb,couleur(ton,1+.08*cos(phase)),phase)
+            ton=(67,69,29) if rang==0 and j in (1,4) else base
+            extension=1+.045*sin(phase+.5)+.075*max(0.,-cos(angle))**2
+            palme(m,(cx,cy,cz+rang*.12),angle,l*extension,a*(1+.08*sin(phase)),
+                  d*(1+.12*cos(phase)),nb,couleur(ton,1+.10*cos(phase)),phase)
     # Deux jeunes lances étroites, la plus haute rejoint exactement le sommet du DFF.
     sommet_z=forme.bornes[2][1]
     for i,(angle,envergure,hauteur) in enumerate(((.86,.45,sommet_z),(3.07,.62,sommet_z-.27))):
         r=(cos(angle),sin(angle)); s=(-r[1],r[0]); longueur=hauteur-cz
-        pied=sommet((cx,cy,cz),(69,108,42))
-        nervure=sommet((cx+.20*r[0],cy+.20*r[1],cz+.57*longueur),(151,164,72))
-        pointe=sommet((cx+envergure*r[0],cy+envergure*r[1],hauteur),(154,169,77))
+        pied=sommet((cx,cy,cz),(31,59,24))
+        nervure=sommet((cx+.20*r[0],cy+.20*r[1],cz+.57*longueur),(70,94,39))
+        pointe=sommet((cx+envergure*r[0],cy+envergure*r[1],hauteur),(76,99,41))
         for cote in (-1,1):
             bord=sommet((cx+.17*r[0]+cote*.10*s[0],cy+.17*r[1]+cote*.10*s[1],
-                         cz+.53*longueur-.035),(112+7*i,142,56))
+                         cz+.53*longueur-.035),(53+5*i,82,33))
             m.feuille(pied,nervure,bord)
             m.feuille(nervure,pointe,bord)
     return m
@@ -227,8 +247,13 @@ def transformer_palmier(blob):
     # Conserver l'écorce locale ; les feuilles sont des surfaces opaques en 3D
     # éclairées par les lumières natives, sans atlas transparent ni matériau émissif.
     indices_mats=[i for i,(k,_,_) in enumerate(mats) if k==rw.MATERIAL]
+    k,vm,ancien=mats[indices_mats[0]]
+    pelure=list(chunks(ancien))
+    ecorce=rw.corps(pelure,rw.STRUCT)
+    rw.remplacer(pelure,rw.STRUCT,ecorce[:16]+pack("<3f",*LUMIERE_ECORCE))
+    mats[indices_mats[0]]=k,vm,rw.assembler(pelure)
     k,vm,_=mats[indices_mats[1]]
-    mat=pack("<I4BII3f",0,255,255,255,255,0,0,.72,.035,1.)
+    mat=pack("<I4BII3f",0,255,255,255,255,0,0,*LUMIERE_PALMES)
     mats[indices_mats[1]]=k,vm,wrap(rw.STRUCT,vm,mat)+wrap(rw.EXTENSION,vm,b"")
     g.flags=(g.flags|0x10)&~1
     g.sphere=(*g.sphere[:5],1)
@@ -238,7 +263,7 @@ def transformer_palmier(blob):
     g.couleurs=bytes(m.couleurs)
     g.faces=b"".join(rw.TRI.pack(b,a,mat,c) for mat in (0,1) for a,b,c in m.faces[mat])
     total=len(g.faces)//rw.TRI.size
-    if total>3900: raise ValueError("Budget de triangles du palmier dépassé")
+    if total>BUDGET_TRIANGLES: raise ValueError("Budget de triangles du palmier dépassé")
     binmesh=bytearray(pack("<3I",0,2,total*3))
     for mat in (0,1):
         indices=[i for tri in m.faces[mat] for i in tri]
