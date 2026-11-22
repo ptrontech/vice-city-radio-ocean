@@ -16,7 +16,7 @@ Dans le journal ou chez Inès, cliquer sur **Sprint et endurance**. À pied, ava
 
 ## Nager et plonger
 
-Entrer à pied dans une eau assez profonde déclenche la nage. Utiliser les commandes de direction pour avancer et tourner. Maintenir **Sprint** accélère la nage, **S’accroupir** fait plonger Tommy et **Sauter** le ramène vers la surface. À l’approche d’une rive basse, avancer vers la terre pour sortir de l’eau.
+Entrer à pied dans une eau assez profonde déclenche la nage. Utiliser les commandes de direction pour avancer et tourner. Maintenir **Sprint** accélère la nage, **S’accroupir** fait plonger Tommy et **Sauter** le ramène vers la surface. Sur le clavier par défaut, ces deux commandes correspondent à **C** et **Espace**. À l’approche d’une rive basse, avancer vers la terre pour sortir de l’eau.
 
 La jauge **Air** indique le souffle disponible. Tommy dispose de 16 secondes en immersion complète. Revenir respirer à la surface recharge la jauge. Rester sous l’eau après épuisement du souffle lui fait perdre progressivement de la vie, jusqu’à la noyade. [Commandes de natation](natif/natation/README.md)
 

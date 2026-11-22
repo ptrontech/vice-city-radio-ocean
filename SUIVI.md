@@ -12,6 +12,8 @@ Windows 11 Pro x64 build 26300, Intel Core i5-13600K à 14 cœurs et 20 processe
 
 Sur la copie PC 1.0 jouable, les 563 modèles de façade reconstruits correspondent aux empreintes attendues. Les 20 véhicules et les deux entrées du panneau de l’aéroport correspondent aux modèles reconstruits à partir des originaux. Le test de migration simule une interruption entre les écritures de l’archive et de l’index, reprend l’installation puis retrouve la voirie d’origine de l’atelier au retrait du lot.
 
+Le jeu a chargé North Beach, Little Havana, Downtown et l’affiche de l’aéroport dans un même parcours. Les 6 043 entrées sont contiguës et dans l’ordre du répertoire natif. Sur le tarmac, Tommy est monté dans l’Admiral, la Sabre, la Police et la Cheetah. Les huit vues avant/arrière ont été filmées sur le même trajet avant et après la modification des modèles.
+
 Dans le Majestic, les positions natives donnent 6,76 m parcourus par la réceptionniste, 11,58 m par le voyageur et 8,70 m par la cliente à l’intérieur du hall. Les trois personnages ont été libérés à la sortie du quartier.
 
 Dans le chenal, Tommy a nagé 9,59 m à la surface puis plongé à 4,20 m sous le niveau de l’eau. Sa réserve est remontée à 16 s en surface. Lors d’une seconde immersion prolongée, le premier point de vie a été perdu à zéro seconde d’air. Le moteur a ensuite confirmé la noyade dans le profil Validation.
