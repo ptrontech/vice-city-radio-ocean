@@ -93,6 +93,8 @@ def start(mode, slot=None):
         lines=subprocess.check_output(["tasklist","/FI","IMAGENAME eq gta-vc.exe","/FO","CSV","/NH"],
             creationflags=subprocess.CREATE_NO_WINDOW).decode("mbcs","replace")
         if '"gta-vc.exe"' in lines.lower():raise RuntimeError("Ferme la partie Vice City en cours avant de changer de profil.")
+        from installer_facades import recuperer
+        recuperer(GAME)
         cfg=json.loads((PROJECT/"config.json").read_text(encoding="utf-8"))
         from demarrage import accompagner, environnement_jeu, reprise, signature_log, echec_avant_moteur
         automatique=cfg.get("demarrageDirect",True)

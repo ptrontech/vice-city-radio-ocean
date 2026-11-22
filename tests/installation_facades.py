@@ -2,7 +2,8 @@
 from hashlib import sha256
 from functools import lru_cache
 from math import hypot
-from struct import unpack_from
+from struct import pack_into, unpack_from
+import json
 import os
 from pathlib import Path
 import sys
@@ -33,6 +34,18 @@ def dictionnaire(dossier, entree):
         return image.read(taille * textures.SECTOR)
 
 
+def empreintes_entrees(dossier, entrees):
+    sommes = []
+    with (dossier / "gta3.img").open("rb") as image:
+        for secteur, taille, _ in entrees:
+            image.seek(secteur * textures.SECTOR)
+            contenu = image.read(taille * textures.SECTOR)
+            if len(contenu) != taille * textures.SECTOR:
+                raise ValueError("Entrée tronquée")
+            sommes.append(sha256(contenu).digest())
+    return sommes
+
+
 def aires_par_materiau(surface):
     aires = [0.] * len(surface["materiaux"])
     sommets = surface["positions"]
@@ -50,6 +63,49 @@ class Installation(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "distincte"):
                 installer_facades.installer(tmp, tmp)
             self.assertEqual(list(Path(tmp).iterdir()), [])
+
+    def test_compactage_ordonne_avec_doublons_et_secteurs_deplaces(self):
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp) / "base"
+            prets = Path(tmp) / "prets"
+            base.mkdir()
+            prets.mkdir()
+            secteur = textures.SECTOR
+            entree = textures.ENTRY.pack
+            (base / "gta3.img").write_bytes(b"A"*secteur + b"B"*secteur + b"C"*secteur)
+            (base / "gta3.dir").write_bytes(entree(2, 1, b"generic.txd") + entree(1, 1, b"mur.dff")
+                                            + entree(0, 1, b"generic.txd"))
+            (base / "generic.txd").write_bytes(b"voirie")
+            installer_facades.compacter(base, prets, b"D"*(2*secteur),
+                                       {1: (installer_facades.TAILLE_VOIRIE // secteur, 2)})
+            self.assertEqual([(p,n) for p,n,_ in index(prets)], [(0,1),(1,2),(3,1)])
+            self.assertEqual((prets / "gta3.img").read_bytes(), b"C"*secteur+b"D"*(2*secteur)+b"A"*secteur)
+            self.assertEqual((prets / "generic.txd").read_bytes(), b"voirie")
+
+    def test_reprise_du_lancement_preserve_un_changement_tiers(self):
+        with TemporaryDirectory() as tmp:
+            dossier = Path(tmp) / "models"
+            journal = dossier / installer_facades.TRANSACTION
+            journal.mkdir(parents=True)
+            anciens = {n: n.encode() for n in installer_facades.VOIRIE}
+            nouveaux = {n: b"v2-" + contenu for n, contenu in anciens.items()}
+            a = {n: sha256(v).hexdigest() for n,v in anciens.items()}
+            b = {n: sha256(v).hexdigest() for n,v in nouveaux.items()}
+            for nom in a:
+                (dossier / nom).write_bytes(anciens[nom])
+                (journal / nom).write_bytes(nouveaux[nom])
+            (journal / installer_facades.MANIFESTE).write_text(json.dumps({"avant":a,"cible":b}), encoding="utf-8")
+            with patch.object(installer_facades, "VOIRIE", a), patch.object(installer_facades, "VILLE", b):
+                os.replace(journal / "gta3.img", dossier / "gta3.img")
+                (dossier / "generic.txd").write_bytes(b"personnel")
+                with self.assertRaisesRegex(ValueError, "étrangère"):
+                    installer_facades.recuperer(tmp)
+                self.assertEqual((dossier / "generic.txd").read_bytes(), b"personnel")
+                self.assertEqual((dossier / "gta3.dir").read_bytes(), anciens["gta3.dir"])
+                (dossier / "generic.txd").write_bytes(anciens["generic.txd"])
+                self.assertTrue(installer_facades.recuperer(tmp))
+                self.assertFalse(installer_facades.recuperer(tmp))
+                self.assertEqual(installer_facades.etat(dossier), b)
 
     def test_marquise_arrondie_et_reversible_par_geometrie(self):
         # Dalle rectangulaire fictive et vitrine de référence au-dessous.
@@ -88,22 +144,30 @@ class Installation(unittest.TestCase):
             install = lambda actives: installer_facades.installer(origine, travail, actives)
             self.assertEqual(install(False)["sha256"], attendues)
             avant = index(modeles)
-            # Échec après l’image agrandie, juste avant le nouvel index.
-            remplacer = textures.replace
-
-            def interrompre(fichier, somme, ecrire):
-                if fichier.name == "gta3.dir":
+            sommes_voirie = empreintes_entrees(modeles, avant)
+            # Couper la véritable publication après l'IMG et avant le DIR.
+            deplacer = os.replace
+            def interrompre(source, fichier):
+                if Path(fichier) == modeles / "gta3.dir":
                     raise OSError("arrêt simulé")
-                remplacer(fichier, somme, ecrire)
-
-            with patch.object(textures, "replace", side_effect=interrompre):
+                deplacer(source, fichier)
+            with patch.object(os, "replace", side_effect=interrompre):
                 with self.assertRaisesRegex(OSError, "arrêt simulé"):
                     install(True)
             self.assertEqual(index(modeles), avant)
+            self.assertTrue(installer_facades.recuperer(travail))
             actif = install(True)
+            self.assertEqual(actif["sha256"], installer_facades.VILLE)
             apres = index(modeles)
-            self.assertEqual(len(avant), len(apres))
-            affectees = [i for i, (a, b) in enumerate(zip(avant, apres)) if a != b]
+            self.assertEqual([n for _,_,n in avant], [n for _,_,n in apres])
+            self.assertEqual(len(apres), 6043)
+            position = 0
+            for debut, taille, _ in apres:
+                self.assertEqual(debut, position)
+                position += taille
+            self.assertEqual((modeles/"gta3.img").stat().st_size, position * textures.SECTOR)
+            sommes_ville = empreintes_entrees(modeles, apres)
+            affectees = [i for i,(a,b) in enumerate(zip(sommes_voirie, sommes_ville)) if a != b]
             plans_ville = installer_facades.facades_ville.inventorier(origine, signer=False)["plans"]
             self.assertEqual({textures.name(avant[i][2]) for i in affectees},
                              installer_facades.ENTREES | set(plans_ville))
@@ -212,8 +276,19 @@ class Installation(unittest.TestCase):
             # réinstallation doit retrouver exactement l’archive active antérieure.
             self.assertEqual(install(False)["sha256"], attendues)
             self.assertEqual({n: textures.digest(modeles/n).hexdigest() for n in attendues}, attendues)
+            # Reconstruire la précédente version à secteurs ajoutés puis migrer.
+            supplement, pointeurs = secteurs(src, (src / "gta3.dir").read_bytes())
+            with (modeles / "gta3.img").open("ab") as image:
+                image.write(supplement)
+            ancien = bytearray((modeles / "gta3.dir").read_bytes())
+            for i, valeurs in pointeurs.items():
+                pack_into("<II", ancien, i*textures.ENTRY.size, *valeurs)
+            (modeles / "gta3.dir").write_bytes(ancien)
+            somme_img = textures.digest(modeles / "gta3.img").hexdigest()
+            self.assertEqual(installer_facades.HISTORIQUE[somme_img], sha256(ancien).hexdigest())
             self.assertEqual(install(True), actif)
-            self.assertEqual(sha256((modeles/"gta3.dir").read_bytes()).hexdigest(), actif["sha256"]["gta3.dir"])
+            self.assertEqual(installer_facades.etat(modeles), installer_facades.VILLE)
+            self.assertFalse((modeles / installer_facades.TRANSACTION).exists())
             self.assertEqual(textures.digest(src/"gta3.img").hexdigest(), textures.RETAIL["gta3.img"])
 
 
