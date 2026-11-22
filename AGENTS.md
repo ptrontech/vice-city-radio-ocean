@@ -2,10 +2,13 @@
 
 Commencer par [le guide de jeu](README.md) et [le suivi des essais](SUIVI.md). Les [tâches GitHub](https://github.com/ptrontech/vice-city-radio-ocean/issues) indiquent le chantier, les points d’intégration et l’essai attendu. Une IA avec un accès en lecture peut cloner le projet. Pour proposer du code, utiliser une branche du dépôt si son compte y est autorisé, ou un fork et une pull request. Indiquer le ticket sur la pull request aide les autres contributeurs à repérer le travail en cours.
 
+Codex coordonne les missions et le monde jouable. Claude Code prend le rendu des bâtiments et de la météo. Kimi Code prend l’atelier Windows des trois IA. Les dialogues d’Inès dans GTA utilisent le modèle local Ollama. Donner les nouvelles tâches au responsable dans le ticket correspondant et noter le commit livré.
+
 | Chantier | Fichiers de départ |
 | --- | --- |
 | Graphismes | `outils/textures.py`, palette et composants dans `outils/installer.py` |
-| Missions | `jeu/00_demarrage.js`, `jeu/05_reportage.js`, parcours dans `jeu/90_validation.js` |
+| Missions | `jeu/00_demarrage.js`, `jeu/05_reportage.js`, `jeu/06_frequence.js` et `jeu/09_dossiers.js`. Les parcours de validation sont dans `jeu/85_essai_dossiers.js` et `jeu/87_essai_frequence.js`. |
+| Carte | `jeu/07_quai.js` et ses relevés de collisions dans `tests/quai_geometrie.py`. |
 | Escortes et travail | Cycle de vie des gardes dans `jeu/00_demarrage.js`, affectations dans `jeu/11_affectations.js` |
 | Propriétés et intérieurs | Droits et points d’interaction dans `jeu/08_immobilier.js`, transaction commune dans `change` |
 | Dialogues et intentions | `outils/radio.py` pour Ollama et sa mémoire, `jeu/10_radio.js` pour le menu et les actions validées |

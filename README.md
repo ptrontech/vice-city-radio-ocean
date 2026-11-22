@@ -8,7 +8,7 @@ Double-cliquer sur **Jouer à Radio Océan** dans `E:\ViceCityAtelier`. Le lance
 
 En campagne, aller sur Ocean Drive, sur le trottoir côté plage en face de l’Ocean View. Le repère magenta signale Inès, le vert la régie. Approcher à pied ouvre le menu. Les destinations de mission sont jaunes. Cliquer sur **Accepter la course** ou **Discuter avec Ines**. Pour un message libre, saisir une phrase et cliquer sur **Envoyer le message**. Deux questions sont aussi accessibles à la souris.
 
-Le journal s’ouvre avec **J**. Le lanceur permet de choisir une autre lettre. À la manette, essayer **Sélection**, la croix haut/bas puis le bouton sud pour valider. Les numéros de boutons sont réglables dans `config.json`. Après une modification manuelle du fichier, relancer l’installateur. Un clic sur **Fermer** rend le contrôle à la caméra de GTA.
+Le journal s’ouvre avec **J**. Le lanceur permet de choisir une autre lettre. À la manette, essayer **Sélection**, la croix haut/bas puis le bouton sud pour valider. Les numéros de boutons sont réglables dans `config.json`. Les réglages manuels sont pris en compte au prochain lancement. Un clic sur **Fermer** rend le contrôle à la caméra de GTA.
 
 ## Sprint et endurance
 
@@ -19,6 +19,8 @@ Dans le journal ou chez Inès, cliquer sur **Sprint et endurance**. À pied, ava
 | Activité | Fonctionnement |
 | --- | --- |
 | Dernière bande avant minuit | Prendre la commande chez Inès, atteindre le repère jaune et revenir avant quatre minutes. Trois points de collecte alternent sur Ocean Drive. Chaque livraison rapporte 360 $ et un point de réputation. |
+| La fréquence perdue | Après une première livraison, cliquer sur **Retrouver Milo** chez Inès. Suivre les indices à pied ou en voiture, parler au technicien à pied, puis revenir ensemble. Milo peut prendre une place passager. Descendre devant la radio pour toucher 440 $. |
+| Les voix de Vice | Après la première livraison, ouvrir le carnet chez Inès et choisir une des quatre familles. Enregistrer le témoin à pied, puis remettre sa bande chez Inès pour 280 $. Diffuser les quatre débloque un rendez-vous de fiction avec Pablo Escobar au nouveau quai, pour une dernière bande à 800 $. Le journal conserve les témoignages déjà diffusés. |
 | Régie du News Café | Sur place, acheter le comptoir extérieur pour 700 $ puis confirmer. Chaque émission livrée après l’achat y dépose 100 $ à retirer. Le comptoir reste à l’extérieur du bâtiment. |
 | Le direct du News Café | La régie achetée propose un transport à 520 $. Venir dans une voiture avec une place libre, attendre qu’Alma monte, rejoindre le site du direct et s’arrêter pour qu’elle descende. |
 | Suite 317 de l’Ocean View | Le bureau se trouve à l’étage dans la suite de l’hôtel. Le bail de 720 $ rapporte 45 $ par émission. |
@@ -28,9 +30,15 @@ Dans le journal ou chez Inès, cliquer sur **Sprint et endurance**. À pied, ava
 
 Le compte de la radio paie les contrats et la propriété. L’argent et les sauvegardes des missions Rockstar restent gérés par GTA. Une livraison abandonnée ou expirée ne rapporte rien. Le mod suspend ses personnages et ses repères pendant les missions originales. Une course inachevée se reprend chez le contact.
 
+## Le quai de Little Havana
+
+Le repère bleu clair mène à la jetée sur la rive de Little Havana. Suivre la nouvelle passerelle jusqu’au banc pour écouter le bulletin de Radio Océan. Les planches prolongent le littoral d’environ 55 m de parcours. Ce ponton accueille aussi le dernier rendez-vous des **Voix de Vice**.
+
 ## Affichage et souris
 
-Le réglage de départ utilise une fenêtre de **1920 × 1080 en 16:9**, avec champ de vision indépendant de la vitesse de la voiture. Le jeu conserve son limiteur. **Affichage et commandes** permet d’activer le 3440 × 1440 au lancement suivant. Les catégories de météo d’origine restent présentes. La palette fait évoluer le ciel indigo, l’horizon de fin de journée, les reflets colorés de l’eau et la distance de vue par temps clair. Project2DFX ajoute des halos lumineux lointains. Sur Ocean Drive, la chaussée et la bordure du trottoir utilisent les variantes 256 × 256 retrouvées dans le jeu, avec leurs niveaux de détail d’origine.
+Le réglage de départ utilise une fenêtre de **1920 × 1080 en 16:9**, avec champ de vision indépendant de la vitesse de la voiture. Le jeu conserve son limiteur. Le lanceur permet de rétablir les deux vidéos de démarrage. Les cinématiques scénarisées restent gérées par la campagne. **Affichage et commandes** permet d’activer le 3440 × 1440 au lancement suivant. Les catégories de météo d’origine restent présentes. La palette fait évoluer le ciel indigo, l’horizon de fin de journée, les reflets colorés de l’eau et la distance de vue par temps clair. Project2DFX ajoute des halos lumineux lointains. Sur Ocean Drive, la chaussée et la bordure du trottoir utilisent les variantes 256 × 256 retrouvées dans le jeu, avec leurs niveaux de détail d’origine.
+
+Le réglage **Nuits d’orage** de Claude agit sur le ciel, le brouillard, les nuages, l’eau et les halos pendant les nuits de pluie et d’ouragan. On peut le changer à la souris dans **Affichage et commandes**. Le lanceur reconstruit toujours la palette depuis l’installation source.
 
 Les profils de jeu ont été initialisés avec une copie de tes réglages de commandes d’avant les essais. Le lanceur se manipule à la souris. Le menu de la radio libère son curseur à la fermeture. Les réglages de sensibilité restent accessibles depuis les options de GTA.
 
@@ -44,6 +52,10 @@ Chaque achat, recrutement, mission réussie ou retrait écrit immédiatement la 
 - Pour archiver une partie, fermer le jeu puis copier tout le dossier du profil. Pour la restaurer, fermer le jeu et remettre le dossier sauvegardé à cette place.
 - Pour jouer à la version d’avant, ouvrir `E:\Games\GTA_VC_1.0\gta-vc.exe`. Ses fichiers utilisateur se trouvent dans les Documents Windows. Leur copie initiale est dans `E:\ViceCityAtelier\SauvegardeInitiale`.
 - Pour désinstaller l’extension, fermer le jeu et le lanceur, conserver les profils souhaités hors de `E:\ViceCityAtelier`, puis supprimer le dossier Atelier et son raccourci. L’original reste disponible sur E:.
+
+## L’équipe de l’atelier
+
+Codex développe les missions, la progression et les lieux jouables. Claude Code travaille sur les graphismes et les façades. Kimi prend l’application Windows qui rassemble les trois agents. Inès répond depuis Ollama sur le PC du joueur et peut rappeler un recrutement ou un bail à partir des faits enregistrés en jeu. Le suivi public des contributions et de leur validation figure dans les [tickets de Radio Océan](https://github.com/ptrontech/vice-city-radio-ocean/issues).
 
 ## Installation et reprise technique
 

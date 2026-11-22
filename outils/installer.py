@@ -6,6 +6,9 @@ import os
 import shutil
 import re
 import sys
+from tempfile import NamedTemporaryFile
+
+from nuits_orage import appliquer_nuits_orage
 
 PROJET = Path(__file__).resolve().parents[1]
 BASE = PROJET.parent
@@ -33,8 +36,14 @@ def patch_value(path, key, value):
         raise ValueError(f"{key} absent ou ambigu dans {path}")
     path.write_text(result, encoding="latin-1")
 
-def change_palette():
-    lines = (ORIGINE/"data/timecyc.dat").read_text(encoding="latin-1").splitlines()
+def change_palette(nuits_orage=False):
+    source = ORIGINE / "data/timecyc.dat"
+    target = JEU / "data/timecyc.dat"
+    if source.resolve() == target.resolve():
+        raise ValueError("La palette de la copie de travail doit être distincte de l’original.")
+    original = source.read_bytes().decode("latin-1")
+    newline = "\r\n" if "\r\n" in original else "\n"
+    lines = original.splitlines()
     section, hour, changed = -1, 0, 0
     for i, line in enumerate(lines):
         if line.startswith("////"):
@@ -65,7 +74,19 @@ def change_palette():
         hour += 1
     if changed != 144:
         raise ValueError(f"Nombre de tranches météo inattendu {changed}")
-    (JEU/"data/timecyc.dat").write_text("\n".join(lines)+"\n",encoding="latin-1")
+    palette = newline.join(lines) + newline
+    if nuits_orage:
+        palette = appliquer_nuits_orage(palette)
+    result = palette.encode("latin-1")
+    if target.exists() and target.read_bytes() == result:
+        return
+    with NamedTemporaryFile(dir=target.parent, prefix=".radio-timecyc-", delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        temporary.write_bytes(result)
+        temporary.replace(target)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 def deploy_script(config):
     target=JEU/"CLEO/RadioOcean"
@@ -122,8 +143,9 @@ def install():
         original_settings=BASE/"SauvegardeInitiale/GTA Vice City User Files/gta_vc.set"
         if original_settings.is_file() and not (JEU/folder/"gta_vc.set").exists():
             copy(original_settings,JEU/folder/"gta_vc.set")
-    deploy_script(json.loads((PROJET/"config.json").read_text(encoding="utf-8")))
-    change_palette()
+    config = json.loads((PROJET/"config.json").read_text(encoding="utf-8"))
+    deploy_script(config)
+    change_palette(nuits_orage=config.get("nuitsOrage", False))
     from textures import construire
     construire(ORIGINE,JEU/"models/generic.txd")
 

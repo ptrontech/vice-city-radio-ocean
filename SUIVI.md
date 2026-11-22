@@ -48,6 +48,16 @@ Les traces sur le PC sont dans `E:\ViceCityAtelier\Mesures`. Pour répéter, fer
 
 Claude Code a examiné le calcul des distances et la reprise du carnet. Avec des seuils personnalisés de 10, 20 et 25 m, nous avons reproduit une validation trop tardive du dernier grade. Le correctif enregistre désormais la distance exacte du palier. Chaque nouvelle tentative manuelle signale aussi une écriture refusée. Le lanceur permet de réaffecter la touche suivie à la souris. Sept groupes de régression couvrent notamment ces cas et la reprise d’un enregistrement antérieur après une interruption.
 
+## Milo, la météo et les cinq voix
+
+Sur le profil Validation en 1920 × 1080, Milo a suivi Tommy puis a pris une place passager. La présence du joueur dans la voiture a bloqué le paiement. Après la descente devant Inès, le compte a reçu 440 $, un point de réputation et les revenus attendus des locaux. Le scénario automatisé rapproche le véhicule des objectifs et laisse le moteur gérer l’embarquement et la sortie.
+
+Avec le profil Nuits d’orage de Claude, Ocean Drive à 23 h sous la pluie a donné 366 intervalles de boucle mesurés, une médiane de 33 ms, un 95e centile de 34 ms et un 99e centile de 35 ms. La comparaison de palettes change 16 tranches horaires dans chacun des deux blocs de pluie et d’ouragan. L’aperçu de couleurs se génère avec `outils/apercu_meteo.py`.
+
+Le quai de Little Havana passe les contrôles de 233 points d’appui géométriques. Dans le jeu, Tommy est resté sur les planches aux six emplacements sondés, entre la jetée existante et le banc. Le bouton **Relever le bulletin du ponton** a fonctionné. Les essais de dossiers ont ensuite engendré les cinq témoins, ouvert chaque entretien et accepté une seule remise de bande auprès d’Inès. Les quatre premiers rapportent chacun 280 $ et le dernier 800 $. Le jeu a relu les cinq dossiers dans sa sauvegarde, avec 14 points de réputation et 3 010 $ en caisse sur ce profil de test. Les déplacements de la visite de validation sont automatisés.
+
+Le lancement rapide remplace temporairement les deux films d’introduction par deux passages d’un clip noir et muet de deux secondes généré pour le projet. Sur ce PC, deux lancements ont atteint le moteur de scripts en neuf et dix secondes, dont un suivi de l’intégralité du parcours du quai et des factions. Les vidéos complètes sont accessibles depuis le lanceur. Les essais portent sur des sessions courtes.
+
 ## Lots suivants
 
 | Fonctionnalité | Intérêt et travail restant |
